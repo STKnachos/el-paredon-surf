@@ -1,39 +1,28 @@
-/* ============================================
-   DESIGN SYSTEM - Theme Variables
-   Learn: Using CSS custom properties makes 
-   theming and consistent spacing easy to manage.
-   ============================================ */
 :root {
-    /* Primary Colors */
-    --color-primary: #0ea5e9;      /* Sky blue */
-    --color-primary-dark: #0284c7; /* Darker shade for hover states */
-    --color-bg: #f8fafc;           /* Light gray background */
-    --color-card-bg: #ffffff;      /* White for cards */
-    --color-text: #334155;         /* Slate gray text */
-    --color-muted: #64748b;        /* Softer gray for labels */
+    --color-primary: #0ea5e9;
+    --color-primary-dark: #0284c7;
+    --color-bg: #f8fafc;
+    --color-card-bg: #ffffff;
+    --color-text: #334155;
+    --color-muted: #64748b;
     
-    /* Status Colors for Wave Rating */
-    --good-wave: #10b981;          /* Green = great waves */
-    --moderate-wave: #f59e0b;      /* Orange = okay waves */
-    --poor-wave: #ef4444;          /* Red = small/poor */
+    --good-wave: #10b981;
+    --moderate-wave: #f59e0b;
+    --poor-wave: #ef4444;
     
-    /* Spacing Scale - Consistent margins/padding */
     --space-xs: 0.5rem;
     --space-sm: 1rem;
     --space-md: 1.5rem;
     --space-lg: 2rem;
     
-    /* Border Radius for Rounded Corners */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     
-    /* Shadows for Depth */
     --shadow-subtle: 0 2px 8px rgba(0,0,0,0.06);
     --shadow-raised: 0 4px 16px rgba(0,0,0,0.1);
 }
 
-/* Reset & Base Styles */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -41,7 +30,7 @@
 }
 
 body {
-    font-family: system-ui, -apple-system, sans-serif; /* Native fonts load faster */
+    font-family: system-ui, -apple-system, sans-serif;
     background: var(--color-bg);
     color: var(--color-text);
     line-height: 1.5;
@@ -49,13 +38,52 @@ body {
 }
 
 .container {
-    max-width: 480px;           /* Mobile-first narrow container */
+    max-width: 480px;
     margin: 0 auto;
     padding: var(--space-md);
 }
 
+/* === NEW: Wind Direction Hint Card === */
+.wind-hint {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-xs);
+    background: var(--color-card-bg);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-md);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-subtle);
+    text-align: center;
+}
+
+.hint-label {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
+
+.hint-value {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Offshore = favorable = green */
+.favorable {
+    color: var(--good-wave);
+}
+
+/* Onshore = challenging = orange/red */
+.challenging {
+    color: var(--moderate-wave);
+}
+
+/* Neutral/moderate = yellow */
+.moderate {
+    color: #8b5cf6;
+}
+
 /* ============================================
-   HEADER STYLES
+   Rest of styles...
    ============================================ */
 header {
     text-align: center;
@@ -82,14 +110,9 @@ header h1 {
     color: var(--color-muted);
 }
 
-/* ============================================
-   CARD GRID LAYOUT
-   Learn: Grid creates equal-spaced rows 
-   automatically without manual calculations.
-   ============================================ */
 .conditions-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-sm);
     margin-bottom: var(--space-md);
 }
@@ -130,9 +153,6 @@ header h1 {
     color: var(--color-muted);
 }
 
-/* ============================================
-   DETAILED INFO CARDS
-   ============================================ */
 .details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -164,11 +184,6 @@ header h1 {
     font-weight: 600;
 }
 
-/* ============================================
-   HOURLY FORECAST LIST
-   Learn: Horizontal scroll shows many items
-   compactly without vertical clutter.
-   ============================================ */
 .hourly-section {
     margin-bottom: var(--space-lg);
 }
@@ -179,17 +194,68 @@ header h1 {
     color: var(--color-text);
 }
 
+/* === IMPROVED: Desktop scroll behavior === */
 .hourly-list {
     display: flex;
     overflow-x: auto;
     gap: var(--space-sm);
     padding-bottom: var(--space-sm);
-    /* Hide scrollbar in Chrome/Safari */
-    scrollbar-width: none; /* Firefox */
+    position: relative;
+    
+    /* Smooth scrolling for better UX */
+    scroll-behavior: smooth;
+    
+    /* Enable mouse wheel horizontal scroll */
+    scrollbar-gutter: stable both-edges;
+}
+
+/* Show subtle gradient edges indicating more content exists */
+.hourly-list::before,
+.hourly-list::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.3s;
+}
+
+.hourly-list::before {
+    left: 0;
+    background: linear-gradient(to right, var(--color-bg), transparent);
+}
+
+.hourly-list::after {
+    right: 0;
+    background: linear-gradient(to left, var(--color-bg), transparent);
+}
+
+.hourly-list.scrolling-start::before,
+.hourly-list.scrolling-end::after {
+    opacity: 0.7;
 }
 
 .hourly-list::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    height: 6px;
+}
+
+.hourly-list::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+.hourly-list::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+/* Keyboard navigation support */
+.hourly-item:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 .hourly-item {
@@ -201,9 +267,9 @@ header h1 {
     text-align: center;
     box-shadow: var(--shadow-subtle);
     position: relative;
+    cursor: pointer;
 }
 
-/* Dynamic wave size coloring */
 .hourly-item[data-wave-rating="good"] {
     border-left: 4px solid var(--good-wave);
 }
@@ -232,7 +298,6 @@ header h1 {
     color: var(--color-muted);
 }
 
-/* Loading state styling */
 .loading-state {
     text-align: center;
     color: var(--color-muted);
@@ -240,9 +305,6 @@ header h1 {
     font-style: italic;
 }
 
-/* ============================================
-   FOOTER & REFRESH BUTTON
-   ============================================ */
 footer {
     display: flex;
     justify-content: space-between;
@@ -271,9 +333,6 @@ footer a {
     background: var(--color-primary-dark);
 }
 
-/* ============================================
-   ERROR STATE HANDLING
-   ============================================ */
 .error-message {
     background: #fef2f2;
     color: #dc2626;
@@ -283,9 +342,6 @@ footer a {
     font-size: 0.85rem;
 }
 
-/* ============================================
-   RESPONSIVE ADJUSTMENTS FOR TABLETS/LAPTOPS
-   ============================================ */
 @media (min-width: 600px) {
     .container {
         max-width: 600px;
@@ -293,6 +349,6 @@ footer a {
     }
     
     .conditions-grid {
-        grid-template-columns: repeat(4, 1fr); /* Add fourth card slot if needed */
+        grid-template-columns: repeat(4, 1fr);
     }
 }
