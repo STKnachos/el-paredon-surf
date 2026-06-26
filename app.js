@@ -1,12 +1,11 @@
 /**
  * ====================================================
- * EL PAREDÓN SURF FORECAST APP
+ * EL PARedÓN SURF FORECAST APP
  * ==============================
- * Learn: This module uses ES6+ patterns including:
- * - Constants for configuration
- * - Async/await for API calls
- * - Template literals for string interpolation
- * - Arrow functions for concise callbacks
+ * Uses TWO Open-Meteo APIs:
+ * 1. Marine API → wave data (height, direction, period)
+ * 2. Weather API → wind speed, air temperature
+ * Results are merged by matching hourly timestamps.
  * ====================================================
  */
 
@@ -16,17 +15,21 @@ const CONFIG = {
         lat: 14.43,
         lon: -91.70
     },
-    // Request hourly data for wave info + basic weather
-    apiUrl: 'https://marine-api.open-meteo.com/v1/marine',
-    parameters: 'wave_height,wave_direction,wave_period,wind_speed,temperature_2m'
+    // Marine API: wave-only parameters
+    marineUrl: 'https://marine-api.open-meteo.com/v1/marine',
+    marineParams: 'wave_height,wave_direction,wave_period',
+
+    // Weather API: wind + temperature parameters
+    weatherUrl: 'https://api.open-meteo.com/v1/forecast',
+    weatherParams: 'wind_speed_10m,temperature_2m'
 };
 
-// Cache last successful response to avoid unnecessary network calls
+// Cache last successful response
 let cachedData = null;
 let lastUpdatedTimestamp = null;
 
 // ============================================
-// INITIALIZATION - Runs when page loads
+// INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏄 Surf forecast app initialized');
@@ -36,19 +39,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Load data from API or cache
- * Uses cache-refresh strategy for better UX
+ * Load data from both APIs in parallel, then merge
  */
 async function loadData() {
     try {
-        // Try loading fresh data first
-        const newData = await fetchSurfForecast();
-        updateUI(newData);
-        cacheData(newData);
+        const [marineData, weatherData] = await Promise.all([
+            fetchMarineForecast(),
+            fetchWeatherForecast()
+        ]);
+
+        // Merge weather fields into marine data's hourly object
+        const merged = mergeData(marineData, weatherData);
+
+        updateUI(merged);
+        cacheData(merged);
     } catch (error) {
         handleError(error);
-        
-        // If API fails and we have cached data, show it anyway
+
+        // Fall back to cached data if available
         if (cachedData) {
             console.warn('Using cached data due to API failure');
             updateUI(cachedData, true);
@@ -57,115 +65,137 @@ async function loadData() {
 }
 
 /**
- * Fetches marine weather data from Open-Meteo
- * Returns parsed JSON object
+ * Fetches MARINE data (waves) from Open-Meteo
  */
-async function fetchSurfForecast() {
+async function fetchMarineForecast() {
     const params = new URLSearchParams({
         latitude: CONFIG.location.lat,
         longitude: CONFIG.location.lon,
-        hourly: CONFIG.parameters
+        hourly: CONFIG.marineParams
     });
-    
-    const url = `${CONFIG.apiUrl}?${params.toString()}`;
-    
-    console.log(`Fetching from: ${url}`);
-    
+
+    const url = `${CONFIG.marineUrl}?${params.toString()}`;
+    console.log(`Fetching marine data from: ${url}`);
+
     const response = await fetch(url);
-    
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Marine API error! status: ${response.status}`);
     }
-    
     return await response.json();
 }
 
 /**
- * Update all UI elements with fetched data
- * @param {Object} data - Open-Meteo JSON response
- * @param {Boolean} isCached - Whether this is stale cached data
+ * Fetches WEATHER data (wind, temp) from Open-Meteo
+ */
+async function fetchWeatherForecast() {
+    const params = new URLSearchParams({
+        latitude: CONFIG.location.lat,
+        longitude: CONFIG.location.lon,
+        hourly: CONFIG.weatherParams
+    });
+
+    const url = `${CONFIG.weatherUrl}?${params.toString()}`;
+    console.log(`Fetching weather data from: ${url}`);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Weather API error! status: ${response.status}`);
+    }
+    return await response.json();
+}
+
+/**
+ * Merges marine + weather data by matching timestamps
+ * Returns a combined hourly object with all fields
+ */
+function mergeData(marineData, weatherData) {
+    const marineHourly = marineData.hourly;
+    const weatherHourly = weatherData.hourly;
+
+    // Add wind and temp into the marine hourly object
+    marineHourly.wind_speed = weatherHourly.wind_speed_10m;
+    marineHourly.temperature_2m = weatherHourly.temperature_2m;
+
+    return marineData;
+}
+
+/**
+ * Update all UI elements with merged data
  */
 function updateUI(data, isCached = false) {
     const hourly = data.hourly;
-    
-    // Set last updated timestamp
+
     if (!isCached) {
         lastUpdatedTimestamp = new Date();
-        document.getElementById('last-updated').textContent = 
+        document.getElementById('last-updated').textContent =
             `Updated: ${formatTime(lastUpdatedTimestamp)}`;
     }
-    
-    // Extract current hour's data
+
     const currentHourIndex = getCurrentHourIndex(hourly.time);
-    
-    // Update top condition cards
-    document.getElementById('wave-height').textContent = 
+
+    // Top condition cards
+    document.getElementById('wave-height').textContent =
         formatToDisplaySize(hourly.wave_height[currentHourIndex]);
-    
-    document.getElementById('wind-speed').textContent = 
+
+    document.getElementById('wind-speed').textContent =
         Math.round(hourly.wind_speed[currentHourIndex]).toString();
-    
-    document.getElementById('air-temp').textContent = 
+
+    document.getElementById('air-temp').textContent =
         Math.round(hourly.temperature_2m[currentHourIndex]).toString();
-    
-    document.getElementById('wave-direction').textContent = 
-        `${hourly.wave_direction?.[currentHourIndex] || '--'}°`;
-    
-    document.getElementById('swell-period').textContent = 
-        `${hourly.wave_period?.[currentHourIndex] || '--'} s`;
-    
-    // Render hourly forecast list
+
+    document.getElementById('wave-direction').textContent =
+        `${Math.round(hourly.wave_direction?.[currentHourIndex]) || '--'}°`;
+
+    document.getElementById('swell-period').textContent =
+        `${hourly.wave_period?.[currentHourIndex]?.toFixed(1) || '--'} s`;
+
+    // Render hourly forecast
     renderHourlyForecast(hourly, currentHourIndex);
-    
-    // Remove any existing error messages
+
+    // Remove error messages
     document.querySelector('.error-message')?.remove();
 }
 
 /**
  * Renders the horizontal scrolling hourly forecast
- * Adds colored borders based on wave conditions
  */
 function renderHourlyForecast(hourly, startIndex) {
     const container = document.getElementById('hourly-forecast');
-    container.innerHTML = ''; // Clear loading state
-    
-    // Show next 10 hours starting from current
+    container.innerHTML = '';
+
     const endIndex = Math.min(startIndex + 10, hourly.time.length);
-    
+
     for (let i = startIndex; i < endIndex; i++) {
         const timeStr = hourly.time[i];
         const waveHeight = hourly.wave_height[i];
         const windSpeed = hourly.wind_speed[i];
-        
+
         const item = document.createElement('div');
         item.className = 'hourly-item';
-        
-        // Add rating class for visual feedback
+
         const rating = getWaveRating(waveHeight);
         item.setAttribute('data-wave-rating', rating);
-        
-        // Convert ISO timestamp to local time
+
         const dateObj = new Date(timeStr);
         const hourOnly = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
+
         item.innerHTML = `
             <div class="hourly-time">${hourOnly}</div>
             <div class="hourly-wave">${waveHeight.toFixed(1)}m</div>
             <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>
         `;
-        
+
         container.appendChild(item);
     }
 }
 
 /**
  * Returns rating category for conditional styling
- * Adjust thresholds based on what's considered "great" at your spot
  */
 function getWaveRating(heightMeters) {
-    if (heightMeters >= 1.5) return 'good';     // 1.5m+ = great (knees-head+)
-    if (heightMeters >= 0.8) return 'moderate'; // 0.8-1.5m = decent
-    return 'poor';                              // Below 0.8m = small
+    if (heightMeters >= 1.5) return 'good';
+    if (heightMeters >= 0.8) return 'moderate';
+    return 'poor';
 }
 
 /**
@@ -173,26 +203,22 @@ function getWaveRating(heightMeters) {
  */
 function getCurrentHourIndex(timeArray) {
     const now = new Date();
-    
+
     for (let i = 0; i < timeArray.length; i++) {
         const apiDate = new Date(timeArray[i]);
-        
-        // Match year, month, and day
+
         if (apiDate.getFullYear() === now.getFullYear() &&
             apiDate.getMonth() === now.getMonth() &&
             apiDate.getDate() === now.getDate()) {
-            
-            // Return closest matching index
             return i;
         }
     }
-    
-    // Fallback to middle index if no match
+
     return Math.floor(timeArray.length / 2);
 }
 
 /**
- * Format wave height with special case for very small waves
+ * Format wave height display
  */
 function formatToDisplaySize(value) {
     if (value < 0.3) return '<0.3';
@@ -200,7 +226,7 @@ function formatToDisplaySize(value) {
 }
 
 /**
- * Helper: Format timestamp nicely
+ * Format timestamp nicely
  */
 function formatTime(date) {
     return date.toLocaleString([], {
@@ -211,18 +237,20 @@ function formatTime(date) {
 }
 
 /**
+ * Error handling with user-
+
+/**
  * Error handling with user-friendly message
  */
 function handleError(error) {
     console.error('Error fetching forecast:', error);
-    
-    // Create and insert error element
+
     const container = document.querySelector('.hourly-list');
     container.innerHTML = `<div class="error-message">⚠️ Unable to load forecast. Check connection.</div>`;
 }
 
 /**
- * Cache data to localStorage for offline resilience
+ * Cache data to localStorage
  */
 function cacheData(data) {
     try {
@@ -236,31 +264,29 @@ function cacheData(data) {
 }
 
 /**
- * Initialize last-updated display
+ * Initialize last-updated display from cache
  */
 function initializeLastUpdatedDisplay() {
     const savedTimestamp = localStorage.getItem('cacheTimestamp');
-    
+
     if (savedTimestamp) {
         const stored = new Date(savedTimestamp);
-        document.getElementById('last-updated').textContent = 
+        document.getElementById('last-updated').textContent =
             `Cached: ${formatTime(stored)}`;
     } else {
-        document.getElementById('last-updated').textContent = 
+        document.getElementById('last-updated').textContent =
             'Awaiting first load...';
     }
 }
 
 /**
- * Attach event listeners for refresh button
+ * Attach refresh button listener
  */
 function attachEventListeners() {
     document.getElementById('refresh-btn').addEventListener('click', () => {
-        // Clear cache to force fresh data
         localStorage.removeItem('surfCache');
         loadData();
-        
-        // Button feedback animation
+
         const btn = document.getElementById('refresh-btn');
         btn.style.transform = 'rotate(360deg)';
         setTimeout(() => {
