@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport meta tag ensures proper scaling on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Paredón Surf Forecast</title>
+    
+    <!-- PWA metadata for "Add to Home Screen" functionality -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Preconnect to Open-Meteo domain speeds up API fetch -->
+    <link rel="preconnect" href="https://marine-api.open-meteo.com">
+</head>
+<body>
+    <main class="container">
+        <!-- Header Section -->
+        <header>
+            <h1>🏄 El Paredón</h1>
+            <p class="subtitle">Guatemala • Pacific Coast</p>
+            <time datetime="" id="last-updated"></time>
+        </header>
+
+        <!-- Current Conditions Cards (Top Row) -->
+        <section class="conditions-grid" aria-label="Current conditions">
+            <div class="card wave-card">
+                <span class="icon">🌊</span>
+                <div class="card-content">
+                    <p class="label">Wave Height</p>
+                    <p class="value" id="wave-height">--</p>
+                    <p class="unit">meters</p>
+                </div>
+            </div>
+            
+            <div class="card wind-card">
+                <span class="icon">💨</span>
+                <div class="card-content">
+                    <p class="label">Wind Speed</p>
+                    <p class="value" id="wind-speed">--</p>
+                    <p class="unit">km/h</p>
+                </div>
+            </div>
+            
+            <div class="card temp-card">
+                <span class="icon">☀️</span>
+                <div class="card-content">
+                    <p class="label">Air Temp</p>
+                    <p class="value" id="air-temp">--</p>
+                    <p class="unit">°C</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction & Period Info -->
+        <section class="details-grid">
+            <div class="detail-card">
+                <span class="detail-icon">➤</span>
+                <div>
+                    <p class="detail-label">Wave Direction</p>
+                    <p class="detail-value" id="wave-direction">--°</p>
+                </div>
+            </div>
+            
+            <div class="detail-card">
+                <span class="detail-icon">⏱️</span>
+                <div>
+                    <p class="detail-label">Swell Period</p>
+                    <p class="detail-value" id="swell-period">-- s</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hourly Forecast Scrollable List -->
+        <section class="hourly-section" aria-label="Hourly forecast">
+            <h2>Today's Window</h2>
+            <div class="hourly-list" id="hourly-forecast">
+                <!-- JS will populate this -->
+                <div class="loading-state">Loading forecast...</div>
+            </div>
+        </section>
+
+        <!-- Footer with disclaimer -->
+        <footer>
+            <small>Data by <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></small>
+            <button class="refresh-btn" id="refresh-btn" aria-label="Refresh forecast">↻ Refresh</button>
+        </footer>
+    </main>
+
+    <!-- Scripts loaded after DOM for performance -->
+    <script src="app.js"></script>
+</body>
+</html>
