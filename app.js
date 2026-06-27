@@ -327,9 +327,6 @@ function getWeatherInfo(code) {
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
 
 function updateSummaryBanner(summary) {
     const banner = document.getElementById('summary-banner');
@@ -523,9 +520,6 @@ function findBestWindows(hourly, startIndex, endIndex) {
     return bestScores.slice(0, count).map(x => x.index);
 }
 
-/**
- * Formats timestamp with weekday + 24hr time for "Actualizado:" line
- */
 function formatTime(date) {
     return date.toLocaleString('es-GT', {
         weekday: 'short',
@@ -571,14 +565,14 @@ function formatToDisplaySize(value) {
     return value.toFixed(1);
 }
 
-ime(date) {
+function formatTime(date) {
     return date.toLocaleString('es-GT', {
         weekday: 'short',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        hour12: false
     });
 }
-
 function handleError(error) {
     console.error('Error obteniendo pronóstico:', error);
     const container = document.querySelector('.hourly-list');
