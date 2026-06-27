@@ -272,11 +272,6 @@ header h1 {
     opacity: 1;
 }
 
-[data-theme="dark"] .sponsor-logo {
-    filter: invert(1);
-    opacity: 0.8;
-}
-
 /* === Condition Cards === */
 .conditions-grid {
     display: grid;
