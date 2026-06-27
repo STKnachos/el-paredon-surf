@@ -22,7 +22,7 @@ https://stknachos.github.io/el-paredon-surf/
 
 ### Smart Display
 - Daily summary banner with dynamic condition-based text and color
-- Best surfing window highlighting (⭐) in hourly forecast
+- Best surfing window highlighting (🌊) in hourly forecast
 - Color-coded wave quality ratings (green/orange/red)
 - Horizontal scrollable hourly forecast (Shift + mouse wheel on desktop)
 
