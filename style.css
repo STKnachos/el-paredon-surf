@@ -125,11 +125,20 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.15); opacity: 0.9; }
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.9;
+    }
 }
 
-.summary-content { flex: 1; z-index: 1; }
+.summary-content {
+    flex: 1;
+    z-index: 1;
+}
 
 .summary-text {
     font-size: 1rem;
@@ -184,7 +193,9 @@ body {
     font-weight: 500;
 }
 
-.tide-status-icon { font-size: 1.1rem; }
+.tide-status-icon {
+    font-size: 1.1rem;
+}
 
 .tide-rising { color: var(--good-wave); }
 .tide-falling { color: var(--moderate-wave); }
@@ -279,10 +290,19 @@ header h1 {
     box-shadow: var(--shadow-subtle);
 }
 
-.detail-icon { font-size: 1.25rem; }
+.detail-icon {
+    font-size: 1.25rem;
+}
 
-.detail-label { font-size: 0.7rem; color: var(--color-muted); }
-.detail-value { font-size: 0.95rem; font-weight: 600; }
+.detail-label {
+    font-size: 0.7rem;
+    color: var(--color-muted);
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
 
 /* === Wind Hint Card === */
 .wind-hint {
@@ -298,16 +318,27 @@ header h1 {
     text-align: center;
 }
 
-.hint-label { font-size: 0.85rem; color: var(--color-muted); }
+.hint-label {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
 
 .hint-value {
     font-weight: 600;
     font-size: 0.95rem;
 }
 
-.favorable { color: var(--good-wave); }
-.challenging { color: var(--moderate-wave); }
-.moderate { color: #8b5cf6; }
+.favorable {
+    color: var(--good-wave);
+}
+
+.challenging {
+    color: var(--moderate-wave);
+}
+
+.moderate {
+    color: #8b5cf6;
+}
 
 /* === Tide & Sun Section === */
 .tide-sun-section {
@@ -355,8 +386,13 @@ header h1 {
     color: var(--color-text);
 }
 
-.tide-high .tide-label { color: var(--color-primary); }
-.tide-low .tide-label { color: var(--moderate-wave); }
+.tide-high .tide-label {
+    color: var(--color-primary);
+}
+
+.tide-low .tide-label {
+    color: var(--moderate-wave);
+}
 
 .info-loading {
     font-size: 0.8rem;
@@ -364,7 +400,7 @@ header h1 {
     font-style: italic;
 }
 
-/* === Hourly Forecast Enhanced === */
+/* === Hourly Forecast === */
 .hourly-section {
     margin-bottom: var(--space-lg);
 }
@@ -385,15 +421,26 @@ header h1 {
     scrollbar-gutter: stable both-edges;
 }
 
-.hourly-list::-webkit-scrollbar { height: 6px; }
-.hourly-list::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 4px; }
-.hourly-list::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 4px; }
+.hourly-list::-webkit-scrollbar {
+    height: 6px;
+}
 
-/* BEST WINDOW HIGHLIGHT STYLE */
+.hourly-list::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+.hourly-list::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+/* BEST WINDOW HIGHLIGHT - FIXED POSITIONING */
 .hourly-item.best-window {
     background: linear-gradient(135deg, #fef3c7, #fde68a);
     box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
     transform: scale(1.05);
+    z-index: 1;
 }
 
 .dark-theme .hourly-item.best-window {
@@ -426,7 +473,8 @@ header h1 {
     min-width: 70px;
     background: var(--color-card-bg);
     border-radius: var(--radius-sm);
-    padding: calc(var(--space-sm) + 8px) var(--space-xs); /* Extra top space */
+    /* Extra top padding to accommodate floating wave icon */
+    padding: calc(var(--space-sm) + 8px) var(--space-xs);
     text-align: center;
     box-shadow: var(--shadow-subtle);
     position: relative;
@@ -438,9 +486,17 @@ header h1 {
     transform: scale(1.03);
 }
 
-.hourly-item[data-wave-rating="good"] { border-left: 4px solid var(--good-wave); }
-.hourly-item[data-wave-rating="moderate"] { border-left: 4px solid var(--moderate-wave); }
-.hourly-item[data-wave-rating="poor"] { border-left: 4px solid var(--poor-wave); }
+.hourly-item[data-wave-rating="good"] {
+    border-left: 4px solid var(--good-wave);
+}
+
+.hourly-item[data-wave-rating="moderate"] {
+    border-left: 4px solid var(--moderate-wave);
+}
+
+.hourly-item[data-wave-rating="poor"] {
+    border-left: 4px solid var(--poor-wave);
+}
 
 .hourly-time {
     font-size: 0.7rem;
@@ -491,7 +547,9 @@ footer {
     transition: background 0.2s;
 }
 
-.refresh-btn:hover { background: var(--color-primary-dark); }
+.refresh-btn:hover {
+    background: var(--color-primary-dark);
+}
 
 .dark-mode-toggle {
     background: var(--color-card-bg);
