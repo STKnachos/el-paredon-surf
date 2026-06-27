@@ -22,8 +22,7 @@ const CONFIG = {
     marineParams: 'wave_height,wave_direction,wave_period,sea_level_height_msl',
     weatherUrl: 'https://api.open-meteo.com/v1/forecast',
     weatherParams: 'wind_speed_10m,temperature_2m,wind_direction_10m',
-    weatherDailyParams: 'sunrise,sunset',
-    beachBearing: 225  // El Paredón faces ~SW
+    weatherDailyParams: 'sunrise,sunset'
 };
 
 let cachedData = null;
@@ -139,7 +138,7 @@ function updateUI(data, isCached = false) {
     );
     updateWindHint(windType);
 
-    // ENHANCED: Daily summary banner with icon + badges
+    // Daily summary banner with icon + badges
     const summary = generateDailySummary(hourly, currentHourIndex, windType);
     updateSummaryBanner(summary);
 
@@ -160,7 +159,7 @@ function updateUI(data, isCached = false) {
 }
 
 /**
- * Generates enhanced daily summary with detailed stats for badges
+ * Generates daily summary with stats for badges
  */
 function generateDailySummary(hourly, currentIndex, windType) {
     const waveHeight = hourly.wave_height[currentIndex];
@@ -182,27 +181,25 @@ function generateDailySummary(hourly, currentIndex, windType) {
         overallRating = 'poor';
     }
 
-    // Wind descriptor
+    // Build wind badge — collapsed duplicate branches
     if (windType) {
-        if (windType.class === 'favorable') {
-            // Calculate approximate cardinal direction from degrees
-            const dirCardinal = getCardinalDirection(windDirection);
-            badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
-        } else if (windType.class === 'challenging') {
-            const dirCardinal = getCardinalDirection(windDirection);
-            badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
-        } else {
+        if (windType.class === 'moderate') {
             badges.push('ventolina suave');
+        } else {
+            const dirCardinal = getCardinalDirection(windDirection);
+            badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
         }
     }
 
-    // Build combined summary text
+    // Build summary text — fixed unreachable condition
     if (overallRating === 'good' && windType?.class === 'favorable') {
         summaryText = `¡Excelentes condiciones! ${capitalize(waveDesc)}. Ideal para surfear.`;
+    } else if (overallRating === 'good' && windType?.class === 'challenging') {
+        summaryText = `Hay ${waveDesc} hoy. Oleaje picado por viento onshore.`;
     } else if (overallRating === 'good') {
-        summaryText = `Hay ${waveDesc} hoy. ${windType?.label === 'Viento de Mar' ? 'Oleaje picado.' : 'Revisa las otras condiciones.'}`;
+        summaryText = `Hay ${waveDesc} hoy. Revisa las otras condiciones.`;
     } else if (overallRating === 'moderate' && windType?.class !== 'challenging') {
-        summaryText = `${capitalize(waveDesc)} con viento manageable. Condiciones decentes.`;
+        summaryText = `${capitalize(waveDesc)} con viento manejable. Condiciones decentes.`;
     } else if (overallRating === 'moderate') {
         summaryText = `${capitalize(waveDesc)}, pero viento onshore. Oleaje menos limpio.`;
     } else if (overallRating === 'poor') {
@@ -234,12 +231,10 @@ function updateSummaryBanner(summary) {
     const icon = document.getElementById('summary-icon');
     const badgesContainer = document.getElementById('condition-badges');
     
-    // Set class for gradient/color
     banner.classList.remove('good', 'moderate', 'poor');
     banner.classList.add(summary.rating);
     text.textContent = summary.text;
     
-    // Dynamic icon based on rating
     const iconMap = {
         good: '🏄',
         moderate: '😎',
@@ -247,7 +242,6 @@ function updateSummaryBanner(summary) {
     };
     icon.textContent = iconMap[summary.rating] || '🏄';
     
-    // Render badges
     if (summary.badges && summary.badges.length > 0) {
         badgesContainer.innerHTML = summary.badges.map(badge => `
             <span class="badge">${badge}</span>
@@ -269,22 +263,12 @@ function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
         const curr = seaLevelArray[i];
         const next = seaLevelArray[i + 1];
 
-        // Local maximum = high tide
         if (curr > prev && curr >= next) {
-            tides.push({
-                type: 'high',
-                time: timeArray[i],
-                height: curr
-            });
+            tides.push({ type: 'high', time: timeArray[i], height: curr });
         }
 
-        // Local minimum = low tide
         if (curr < prev && curr <= next) {
-            tides.push({
-                type: 'low',
-                time: timeArray[i],
-                height: curr
-            });
+            tides.push({ type: 'low', time: timeArray[i], height: curr });
         }
     }
 
@@ -292,9 +276,6 @@ function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
     return tides.slice(0, 4);
 }
 
-/**
- * Renders tide times into the DOM
- */
 function renderTideTimes(tides) {
     const container = document.getElementById('tide-times');
     
@@ -318,9 +299,6 @@ function renderTideTimes(tides) {
     }).join('');
 }
 
-/**
- * Renders sunrise and sunset times
- */
 function renderSunTimes(daily) {
     const container = document.getElementById('sun-times');
     
@@ -329,44 +307,36 @@ function renderSunTimes(daily) {
         return;
     }
 
-    const sunrise = formatHour(daily.sunrise[0]);
-    const sunset = formatHour(daily.sunset[0]);
-
     container.innerHTML = `
         <div class="sun-row">
             <span class="sun-label">🌅 Amanece</span>
-            <span class="sun-time">${sunrise}</span>
+            <span class="sun-time">${formatHour(daily.sunrise[0])}</span>
         </div>
         <div class="sun-row">
             <span class="sun-label">🌇 Atardece</span>
-            <span class="sun-time">${sunset}</span>
+            <span class="sun-time">${formatHour(daily.sunset[0])}</span>
         </div>
     `;
 }
 
 /**
- * Determines if wind is favorable or challenging
+ * Determines if wind is favorable (offshore) or challenging (onshore)
+ * El Paredón faces ~SW (225°), so:
+ * - Wind from S-W (150-270°) = onshore (blowing from sea toward land)
+ * - Wind from N-E (0-149°, 271-360°) = offshore (blowing from land toward sea)
  */
 function determineWindType(windDir, windSpeed) {
     if (!windDir || !windSpeed) return null;
 
-    let label, className;
-    
     if (windSpeed < 10) {
-        label = 'Ventolina suave';
-        className = 'moderate';
-    } else if (windDir >= 150 && windDir <= 270) {
-        label = 'Viento de Mar (Onshore)';
-        className = 'challenging';
-    } else if ((windDir >= 0 && windDir < 150) || (windDir > 270 && windDir <= 360)) {
-        label = 'Viento de Tierra (Offshore)';
-        className = 'favorable';
-    } else {
-        label = 'Viento variable';
-        className = 'moderate';
+        return { label: 'Ventolina suave', class: 'moderate' };
     }
 
-    return { label, class: className };
+    if (windDir >= 150 && windDir <= 270) {
+        return { label: 'Viento de Mar (Onshore)', class: 'challenging' };
+    }
+
+    return { label: 'Viento de Tierra (Offshore)', class: 'favorable' };
 }
 
 function updateWindHint(windType) {
@@ -401,10 +371,8 @@ function renderHourlyForecast(hourly, startIndex) {
         item.setAttribute('role', 'button');
         item.setAttribute('aria-label', `Pronóstico para las ${formatHour(timeStr)}: ${waveHeight.toFixed(1)} metros de oleaje`);
 
-        const hourOnly = formatHour(timeStr);
-
         item.innerHTML = `
-            <div class="hourly-time">${hourOnly}</div>
+            <div class="hourly-time">${formatHour(timeStr)}</div>
             <div class="hourly-wave">${waveHeight.toFixed(1)}m</div>
             <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>
         `;
