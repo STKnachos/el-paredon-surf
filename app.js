@@ -105,6 +105,11 @@ function mergeData(marineData, weatherData) {
     marineHourly.wind_direction = weatherHourly.wind_direction_10m;
     marineData.daily = weatherData.daily;
 
+ // THIS LINE WAS MISSING:
+    marineHourly.weathercode = weatherHourly.weathercode;
+    
+    marineData.daily = weatherData.daily;
+    
     return marineData;
 }
 
