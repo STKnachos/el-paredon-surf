@@ -1,6 +1,6 @@
 # 🏄 El Paredón Surf Forecast
 
-Personal surf and weather dashboard for El Paredón, Guatemala — a beach break on the Pacific coast.
+Personal surf and weather dashboard for El Paredón, Guatemala — a beach break on the Pacific coast. Built as a lightweight PWA with vanilla JavaScript, no frameworks, and no API keys.
 
 ## Live Demo
 Visit the deployed app at:  
@@ -21,10 +21,10 @@ https://stknachos.github.io/el-paredon-surf/
 - Sunrise and sunset times
 
 ### Smart Display
-- Daily summary banner with dynamic condition-based text and color
+- Daily summary banner with dynamic condition-based text, color, and icon
 - Best surfing window highlighting (🌊) in hourly forecast
+- Weather condition icons (☀️ ⛅ 🌧️ ⚡) in hourly cards
 - Color-coded wave quality ratings (green/orange/red)
-- Horizontal scrollable hourly forecast (Shift + mouse wheel on desktop)
 
 ### User Experience
 - Spanish language interface (es-GT)
@@ -32,7 +32,9 @@ https://stknachos.github.io/el-paredon-surf/
 - Dark/light mode toggle (saved per browser)
 - Progressive Web App (installable on mobile via "Add to Home Screen")
 - Responsive design (mobile-first, adapts to tablet/desktop)
+- Horizontal scrollable hourly forecast (touch swipe on mobile, Shift + mouse wheel on desktop)
 - Local cache fallback when API is unavailable
+- Emoji favicon (🏄)
 
 ## Tech Stack
 - **Frontend**: Vanilla HTML/CSS/JavaScript (no frameworks)
@@ -42,6 +44,6 @@ https://stknachos.github.io/el-paredon-surf/
 
 ## API Sources
 - [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) — wave data, sea level height, water temperature
-- [Open-Meteo Forecast API](https://open-meteo.com/en/docs) — wind, air temperature, sunrise/sunset
+- [Open-Meteo Forecast API](https://open-meteo.com/en/docs) — wind, air temperature, weather codes, sunrise/sunset
 
 ## File Structure

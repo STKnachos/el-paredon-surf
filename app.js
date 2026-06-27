@@ -25,7 +25,8 @@ const CONFIG = {
     // ADDED: sea_surface_temperature to parameters
     marineParams: 'wave_height,wave_direction,wave_period,sea_level_height_msl,sea_surface_temperature',
     weatherUrl: 'https://api.open-meteo.com/v1/forecast',
-    weatherParams: 'wind_speed_10m,temperature_2m,wind_direction_10m',
+       // In CONFIG object
+    weatherParams: 'wind_speed_10m,temperature_2m,wind_direction_10m,weathercode',
     weatherDailyParams: 'sunrise,sunset'
 };
 
@@ -293,7 +294,36 @@ function getCardinalDirection(degrees) {
     const index = Math.round((degrees % 360) / 45) % 8;
     return dirs[index];
 }
+/**
+ * Maps Open-Meteo WMO weather codes to Spanish labels & icons
+ */
+function getWeatherInfo(code) {
+    const map = {
+        0: { text: 'Soleado', icon: '☀️' },
+        1: { text: 'Despejado', icon: '🌤️' },
+        2: { text: 'Parcial.', icon: '⛅' },
+        3: { text: 'Nublado', icon: '☁️' },
+        45: { text: 'Niebla', icon: '🌫️' },
+        48: { text: 'Escarcha', icon: '🌫️' },
+        51: { text: 'Llovizna', icon: '💧' },
+        53: { text: 'Llovizna', icon: '💧' },
+        55: { text: 'Llovizna', icon: '💧' },
+        61: { text: 'Lluvia', icon: '🌧️' },
+        63: { text: 'Lluvia', icon: '🌧️' },
+        65: { text: 'Chubasco', icon: '☔' },
+        80: { text: 'Chubasco', icon: '🌦️' },
+        81: { text: 'Chubasco', icon: '🌦️' },
+        82: { text: 'Fuerte', icon: '⛈️' },
+        95: { text: 'Tormenta', icon: '⚡' },
+        96: { text: 'Tormenta', icon: '⚡' },
+        99: { text: 'Tormenta', icon: '⚡' }
+    };
+    return map[code] || { text: '-', icon: '❓' };
+}
 
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -412,7 +442,7 @@ function updateWindHint(windType) {
 }
 
 /**
- * ENHANCED: Render hourly forecast with best window highlighting
+ * ENHANCED: Render hourly forecast with best window highlighting + weather
  */
 function renderHourlyForecast(hourly, startIndex) {
     const container = document.getElementById('hourly-forecast');
@@ -427,6 +457,9 @@ function renderHourlyForecast(hourly, startIndex) {
         const timeStr = hourly.time[i];
         const waveHeight = hourly.wave_height[i];
         const windSpeed = hourly.wind_speed[i];
+        
+        // NEW: Get weather info from weathercode
+        const weather = getWeatherInfo(hourly.weathercode?.[i]);
 
         const item = document.createElement('div');
         item.className = 'hourly-item';
@@ -438,11 +471,13 @@ function renderHourlyForecast(hourly, startIndex) {
         // BEST WINDOW HIGHLIGHTING (NEW)
         if (bestIndices.includes(i)) {
             item.classList.add('best-window');
-            item.setAttribute('aria-label', `Mejor ventana - Pronóstico para las ${formatHour(timeStr)}`);
+            item.setAttribute('aria-label', `Mejor ventana - Pronóstico para las ${formatHour(timeStr)} - ${weather.text}`);
         }
 
+        // UPDATED: Added weather icon row
         item.innerHTML = `
             ${bestIndices.includes(i) ? '<span class="hourly-best-indicator">🌊</span>' : ''}
+            <div class="hourly-weather">${weather.icon}</div>
             <div class="hourly-time">${formatHour(timeStr)}</div>
             <div class="hourly-wave">${waveHeight.toFixed(1)}m</div>
             <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>

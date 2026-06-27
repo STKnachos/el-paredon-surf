@@ -468,12 +468,21 @@ header h1 {
     }
 }
 
+/* NEW: Weather icon row styling */
+.hourly-weather {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+    opacity: 0.9;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+}
+
 .hourly-item {
     flex-shrink: 0;
-    min-width: 70px;
+    min-width: 72px; /* Slightly wider for comfort */
     background: var(--color-card-bg);
     border-radius: var(--radius-sm);
-    padding: var(--space-sm) var(--space-xs);
+    /* Extra top padding to fit weather icon + wave indicator */
+    padding: calc(var(--space-sm) + 6px) var(--space-xs);
     text-align: center;
     box-shadow: var(--shadow-subtle);
     position: relative;
@@ -498,14 +507,15 @@ header h1 {
 }
 
 .hourly-time {
-    font-size: 0.7rem;
+    font-size: 0.65rem; /* Reduced slightly to fit */
     color: var(--color-muted);
+    margin-top: 2px;
 }
 
 .hourly-wave {
     font-size: 1rem;
     font-weight: 600;
-    margin: var(--space-xs) 0;
+    margin: 2px 0;
 }
 
 .hourly-wind {
