@@ -1,11 +1,15 @@
 /**
  * ====================================================
- * PRONÓSTICO DE SURF EL PAREDÓN
+ * EL PAREDÓN SURF FORECAST
  * ==============================
- * Versión traducida al español con mejoras:
- * - Formato horario 24 horas
- * - Indicador de dirección del viento (tierra/mar)
- * - Soporte mejorado para escritorio
+ * Features:
+ * - Wave height, direction, period (Marine API)
+ * - Wind speed, direction, air temp (Weather API)
+ * - Sea level height for tide calculation (Marine API)
+ * - Sunrise/sunset times (Weather API daily)
+ * - Daily summary banner (custom logic)
+ * - Wind onshore/offshore indicator
+ * - 24hr format, Spanish UI
  * ====================================================
  */
 
@@ -14,21 +18,23 @@ const CONFIG = {
         lat: 14.43,
         lon: -91.70
     },
+    // Marine API: wave + sea level (tides)
     marineUrl: 'https://marine-api.open-meteo.com/v1/marine',
-    marineParams: 'wave_height,wave_direction,wave_period',
+    marineParams: 'wave_height,wave_direction,wave_period,sea_level_height_msl',
+
+    // Weather API: wind + temp (hourly) + sunrise/sunset (daily)
     weatherUrl: 'https://api.open-meteo.com/v1/forecast',
     weatherParams: 'wind_speed_10m,temperature_2m,wind_direction_10m',
+    weatherDailyParams: 'sunrise,sunset',
     
-    // Para determinar si viento es onshore/offshore
-    // El Paredón mira aprox. SO (225°), viento del N/NW/O = ONSHORE, SE/S/E = OFFSHORE
-    beachBearing: 225  // grados (dirección que mira la playa)
+    beachBearing: 225  // El Paredón faces ~SW
 };
 
 let cachedData = null;
 let lastUpdatedTimestamp = null;
 
 // ============================================
-// INICIALIZACIÓN
+// INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏄 App de pronóstico inicializada');
@@ -77,7 +83,9 @@ async function fetchWeatherForecast() {
     const params = new URLSearchParams({
         latitude: CONFIG.location.lat,
         longitude: CONFIG.location.lon,
-        hourly: CONFIG.weatherParams
+        hourly: CONFIG.weatherParams,
+        daily: CONFIG.weatherDailyParams,
+        timezone: 'America/Guatemala'
     });
 
     const url = `${CONFIG.weatherUrl}?${params.toString()}`;
@@ -92,15 +100,20 @@ function mergeData(marineData, weatherData) {
     const marineHourly = marineData.hourly;
     const weatherHourly = weatherData.hourly;
 
+    // Merge hourly weather fields into marine data
     marineHourly.wind_speed = weatherHourly.wind_speed_10m;
     marineHourly.temperature_2m = weatherHourly.temperature_2m;
     marineHourly.wind_direction = weatherHourly.wind_direction_10m;
+
+    // Merge daily sunrise/sunset
+    marineData.daily = weatherData.daily;
 
     return marineData;
 }
 
 function updateUI(data, isCached = false) {
     const hourly = data.hourly;
+    const daily = data.daily;
 
     if (!isCached) {
         lastUpdatedTimestamp = new Date();
@@ -110,7 +123,7 @@ function updateUI(data, isCached = false) {
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
 
-    // Tarjetas superiores
+    // Update top condition cards
     document.getElementById('wave-height').textContent =
         formatToDisplaySize(hourly.wave_height[currentHourIndex]);
 
@@ -126,8 +139,213 @@ function updateUI(data, isCached = false) {
     document.getElementById('swell-period').textContent =
         `${hourly.wave_period?.[currentHourIndex]?.toFixed(1) || '--'} s`;
 
-    // NUEVO: Calcular tipo de viento (onshore/offshore)
-    const windType = determineWindType(hourly.wind_direction?.[currentHourIndex], hourly.wind_speed?.[currentHourIndex]);
+    // Wind type indicator
+    const windType = determineWindType(
+        hourly.wind_direction?.[currentHourIndex],
+        hourly.wind_speed?.[currentHourIndex]
+    );
+    updateWindHint(windType);
+
+    // NEW: Daily summary banner
+    const summary = generateDailySummary(hourly, currentHourIndex, windType);
+    updateSummaryBanner(summary);
+
+    // NEW: Tide times
+    if (hourly.sea_level_height_msl) {
+        const tides = calculateTideTimes(hourly.time, hourly.sea_level_height_msl, currentHourIndex);
+        renderTideTimes(tides);
+    }
+
+    // NEW: Sunrise/Sunset
+    if (daily) {
+        renderSunTimes(daily);
+    }
+
+    // Hourly forecast
+    renderHourlyForecast(hourly, currentHourIndex);
+    document.querySelector('.error-message')?.remove();
+}
+
+/**
+ * NEW: Generates a Spanish summary based on conditions
+ */
+function generateDailySummary(hourly, currentIndex, windType) {
+    const waveHeight = hourly.wave_height[currentIndex];
+    const windSpeed = hourly.wind_speed[currentIndex];
+    
+    let waveDesc, windDesc, overallRating, summaryText;
+
+    // Wave description
+    if (waveHeight >= 1.5) {
+        waveDesc = 'olas grandes';
+        overallRating = 'good';
+    } else if (waveHeight >= 0.8) {
+        waveDesc = 'olas medianas';
+        overallRating = 'moderate';
+    } else {
+        waveDesc = 'olas pequeñas';
+        overallRating = 'poor';
+    }
+
+    // Wind description
+    if (windType) {
+        if (windType.class === 'favorable') {
+            windDesc = 'viento offshore';
+        } else if (windType.class === 'challenging') {
+            windDesc = 'viento onshore';
+        } else {
+            windDesc = 'ventolina suave';
+        }
+    } else {
+        windDesc = 'viento variable';
+    }
+
+    // Combined summary
+    if (overallRating === 'good' && windType?.class === 'favorable') {
+        summaryText = `¡Excelentes condiciones! ${capitalize(waveDesc)} con ${windDesc}. ¡A surfear! 🏄`;
+    } else if (overallRating === 'good') {
+        summaryText = `Hay ${waveDesc} hoy, pero ${windDesc}. Podría estar picado.`;
+    } else if (overallRating === 'moderate' && windType?.class !== 'challenging') {
+        summaryText = `${capitalize(waveDesc)} con ${windDesc}. Condiciones decentes.`;
+    } else if (overallRating === 'moderate') {
+        summaryText = `${capitalize(waveDesc)}, pero ${windDesc}. Oleaje picado.`;
+    } else if (overallRating === 'poor') {
+        summaryText = `${capitalize(waveDesc)} hoy con ${windDesc}. Día tranquilo.`;
+    } else {
+        summaryText = `Condiciones variables: ${waveDesc}, ${windDesc}.`;
+    }
+
+    return { text: summaryText, rating: overallRating };
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function updateSummaryBanner(summary) {
+    const banner = document.getElementById('summary-banner');
+    const text = document.getElementById('summary-text');
+    
+    banner.classList.remove('good', 'moderate', 'poor');
+    banner.classList.add(summary.rating);
+    text.textContent = summary.text;
+}
+
+/**
+ * NEW: Calculates high and low tide times from sea level data
+ * Finds local maxima (high) and minima (low) in the next 24 hours
+ */
+function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
+    const tides = [];
+    const endIndex = Math.min(startIndex + 24, timeArray.length);
+
+    for (let i = startIndex + 1; i < endIndex - 1; i++) {
+        const prev = seaLevelArray[i - 1];
+        const curr = seaLevelArray[i];
+        const next = seaLevelArray[i + 1];
+
+        // Local maximum = high tide
+        if (curr > prev && curr >= next) {
+            tides.push({
+                type: 'high',
+                time: timeArray[i],
+                height: curr
+            });
+        }
+
+        // Local minimum = low tide
+        if (curr < prev && curr <= next) {
+            tides.push({
+                type: 'low',
+                time: timeArray[i],
+                height: curr
+            });
+        }
+    }
+
+    // Sort chronologically and return first 4 (typically 2 highs + 2 lows per day)
+    tides.sort((a, b) => new Date(a.time) - new Date(b.time));
+    return tides.slice(0, 4);
+}
+
+/**
+ * NEW: Renders tide times into the DOM
+ */
+function renderTideTimes(tides) {
+    const container = document.getElementById('tide-times');
+    
+    if (!tides || tides.length === 0) {
+        container.innerHTML = '<p class="info-loading">Datos no disponibles</p>';
+        return;
+    }
+
+    container.innerHTML = tides.map(tide => {
+        const time = formatHour(tide.time);
+        const label = tide.type === 'high' ? 'Alta' : 'Baja';
+        const heightStr = tide.height.toFixed(2);
+        const rowClass = tide.type === 'high' ? 'tide-high' : 'tide-low';
+        
+        return `
+            <div class="tide-row ${rowClass}">
+                <span class="tide-label">${label}</span>
+                <span class="tide-time">${time} (${heightStr}m)</span>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * NEW: Renders sunrise and sunset times
+ */
+function renderSunTimes(daily) {
+    const container = document.getElementById('sun-times');
+    
+    if (!daily || !daily.sunrise || !daily.sunset) {
+        container.innerHTML = '<p class="info-loading">Datos no disponibles</p>';
+        return;
+    }
+
+    const sunrise = formatHour(daily.sunrise[0]);
+    const sunset = formatHour(daily.sunset[0]);
+
+    container.innerHTML = `
+        <div class="sun-row">
+            <span class="sun-label">🌅 Amanece</span>
+            <span class="sun-time">${sunrise}</span>
+        </div>
+        <div class="sun-row">
+            <span class="sun-label">🌇 Atardece</span>
+            <span class="sun-time">${sunset}</span>
+        </div>
+    `;
+}
+
+/**
+ * Determines if wind is favorable (offshore) or challenging (onshore)
+ */
+function determineWindType(windDir, windSpeed) {
+    if (!windDir || !windSpeed) return null;
+
+    let label, className;
+    
+    if (windSpeed < 10) {
+        label = 'Ventolina suave';
+        className = 'moderate';
+    } else if (windDir >= 150 && windDir <= 270) {
+        label = 'Viento de Mar (Onshore)';
+        className = 'challenging';
+    } else if ((windDir >= 0 && windDir < 150) || (windDir > 270 && windDir <= 360)) {
+        label = 'Viento de Tierra (Offshore)';
+        className = 'favorable';
+    } else {
+        label = 'Viento variable';
+        className = 'moderate';
+    }
+
+    return { label, class: className };
+}
+
+function updateWindHint(windType) {
     const windHintElement = document.getElementById('wind-hint');
     const windValueElement = document.getElementById('wind-type');
     
@@ -137,39 +355,6 @@ function updateUI(data, isCached = false) {
         windValueElement.textContent = windType.label;
         windHintElement.style.display = 'flex';
     }
-
-    renderHourlyForecast(hourly, currentHourIndex);
-    document.querySelector('.error-message')?.remove();
-}
-
-/**
- * Determina si el viento es favorable (offshore) o desafiante (onshore)
- * Para El Paredón (playa mirando SO ~225°):
- * - Viento desde tierra hacia mar = OFFSHORE (ideal) 🟢
- * - Viento desde mar hacia tierra = ONSHORE (picado) 🔴
- */
-function determineWindType(windDir, windSpeed) {
-    if (!windDir || !windSpeed) return null;
-
-    // Simplificación: viento del norte/noroeste suele ser ONSHORE aquí
-    // Viento del sur/sureste suele ser OFFSHORE
-    let label, className;
-    
-    if (windSpeed < 10) {
-        label = 'Ventolina suave';
-        className = 'moderate';
-    } else if (windDir >= 150 && windDir <= 270) {  // S a W
-        label = 'Viento de Mar (Onshore)';
-        className = 'challenging';
-    } else if ((windDir >= 0 && windDir < 150) || (windDir > 270 && windDir <= 360)) {  // N, NE, E
-        label = 'Viento de Tierra (Offshore)';
-        className = 'favorable';
-    } else {
-        label = 'Viento variable';
-        className = 'moderate';
-    }
-
-    return { label, class: className };
 }
 
 function renderHourlyForecast(hourly, startIndex) {
@@ -185,7 +370,7 @@ function renderHourlyForecast(hourly, startIndex) {
 
         const item = document.createElement('div');
         item.className = 'hourly-item';
-        item.tabIndex = 0; // Hace que sea navegable con teclado
+        item.tabIndex = 0;
         
         const rating = getWaveRating(waveHeight);
         item.setAttribute('data-wave-rating', rating);
@@ -200,18 +385,10 @@ function renderHourlyForecast(hourly, startIndex) {
             <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>
         `;
 
-        // Click para ver detalles (opcional expansión futura)
-        item.addEventListener('click', () => {
-            console.log(`Oleaje a las ${hourOnly}: ${waveHeight}m, Viento: ${windSpeed}km/h`);
-        });
-
         container.appendChild(item);
     }
 }
 
-/**
- * Formatea hora en 24 horas (ejemplo: 14:00, no 2:00 PM)
- */
 function formatHour(timeString) {
     const date = new Date(timeString);
     return date.toLocaleTimeString('es-GT', {
@@ -258,7 +435,6 @@ function formatTime(date) {
 
 function handleError(error) {
     console.error('Error obteniendo pronóstico:', error);
-
     const container = document.querySelector('.hourly-list');
     container.innerHTML = `<div class="error-message">⚠️ No se pudo cargar el pronóstico. Verifica conexión.</div>`;
 }
@@ -300,40 +476,20 @@ function attachEventListeners() {
     });
 }
 
-/**
- * NUEVO: Configurar scroll horizontal mejorado para desktop
- * Permite usar rueda del mouse y flechas del teclado
- */
 function setupHorizontalScroll() {
     const list = document.querySelector('.hourly-list');
     if (!list) return;
 
-    // Detectar inicio y fin del scroll para efectos visuales
     list.addEventListener('scroll', () => {
         list.classList.toggle('scrolling-start', list.scrollLeft > 0);
         list.classList.toggle('scrolling-end', 
             list.scrollLeft + list.clientWidth < list.scrollWidth - 5);
     });
 
-    // Permitir scroll con Shift + Rueda vertical
     list.addEventListener('wheel', (event) => {
         if (event.shiftKey) {
             event.preventDefault();
             list.scrollBy({ left: event.deltaY, behavior: 'smooth' });
         }
     }, { passive: false });
-
-    // Navegación con teclas izquierda/derecha en elementos focaleados
-    const items = list.querySelectorAll('.hourly-item');
-    items.forEach((item, index) => {
-        item.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' && index < items.length - 1) {
-                items[index + 1].focus();
-                items[index + 1].scrollIntoView({ behavior: 'smooth', inline: 'center' });
-            } else if (e.key === 'ArrowLeft' && index > 0) {
-                items[index - 1].focus();
-                items[index - 1].scrollIntoView({ behavior: 'smooth', inline: 'center' });
-            }
-        });
-    });
 }

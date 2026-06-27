@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="style.css">
     
     <link rel="preconnect" href="https://marine-api.open-meteo.com">
+    <link rel="preconnect" href="https://api.open-meteo.com">
 </head>
 <body>
     <main class="container">
@@ -19,6 +20,11 @@
             <p class="subtitle">Guatemala • Costa Pacífica</p>
             <time datetime="" id="last-updated"></time>
         </header>
+
+        <!-- NEW: Daily Summary Banner -->
+        <section class="summary-banner" id="summary-banner">
+            <p class="summary-text" id="summary-text">Cargando resumen...</p>
+        </section>
 
         <section class="conditions-grid" aria-label="Condiciones actuales">
             <div class="card wave-card">
@@ -67,11 +73,27 @@
             </div>
         </section>
 
-        <!-- NEW: Added directional hint for wind -->
         <div class="wind-hint" id="wind-hint">
             <span class="hint-label">🧭 Viento:</span>
             <span class="hint-value" id="wind-type">--</span>
         </div>
+
+        <!-- NEW: Tide & Sun Info Section -->
+        <section class="tide-sun-section">
+            <div class="info-block tide-block">
+                <h3 class="info-title">🌊 Mareas</h3>
+                <div id="tide-times" class="tide-times">
+                    <p class="info-loading">Cargando mareas...</p>
+                </div>
+            </div>
+            
+            <div class="info-block sun-block">
+                <h3 class="info-title">☀️ Sol</h3>
+                <div id="sun-times" class="sun-times">
+                    <p class="info-loading">Cargando...</p>
+                </div>
+            </div>
+        </section>
 
         <section class="hourly-section" aria-label="Pronóstico por hora">
             <h2>Ventana de Hoy</h2>

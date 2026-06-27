@@ -43,7 +43,37 @@ body {
     padding: var(--space-md);
 }
 
-/* === NEW: Wind Direction Hint Card === */
+/* === NEW: Daily Summary Banner === */
+.summary-banner {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: white;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    text-align: center;
+    box-shadow: var(--shadow-subtle);
+}
+
+.summary-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Summary banner variants */
+.summary-banner.good {
+    background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.summary-banner.moderate {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+}
+
+.summary-banner.poor {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+/* === Wind Hint Card === */
 .wind-hint {
     display: flex;
     justify-content: center;
@@ -67,24 +97,79 @@ body {
     font-size: 0.95rem;
 }
 
-/* Offshore = favorable = green */
 .favorable {
     color: var(--good-wave);
 }
 
-/* Onshore = challenging = orange/red */
 .challenging {
     color: var(--moderate-wave);
 }
 
-/* Neutral/moderate = yellow */
 .moderate {
     color: #8b5cf6;
 }
 
-/* ============================================
-   Rest of styles...
-   ============================================ */
+/* === NEW: Tide & Sun Section === */
+.tide-sun-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.info-block {
+    background: var(--color-card-bg);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    box-shadow: var(--shadow-subtle);
+}
+
+.info-title {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    margin-bottom: var(--space-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tide-times, .sun-times {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.tide-row, .sun-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.tide-label, .sun-label {
+    color: var(--color-muted);
+    font-weight: 500;
+}
+
+.tide-time, .sun-time {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.tide-high .tide-label {
+    color: var(--color-primary);
+}
+
+.tide-low .tide-label {
+    color: var(--moderate-wave);
+}
+
+.info-loading {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    font-style: italic;
+}
+
+/* === Header === */
 header {
     text-align: center;
     margin-bottom: var(--space-lg);
@@ -110,6 +195,7 @@ header h1 {
     color: var(--color-muted);
 }
 
+/* === Condition Cards === */
 .conditions-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -153,6 +239,7 @@ header h1 {
     color: var(--color-muted);
 }
 
+/* === Detail Cards === */
 .details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -184,6 +271,7 @@ header h1 {
     font-weight: 600;
 }
 
+/* === Hourly Forecast === */
 .hourly-section {
     margin-bottom: var(--space-lg);
 }
@@ -194,22 +282,16 @@ header h1 {
     color: var(--color-text);
 }
 
-/* === IMPROVED: Desktop scroll behavior === */
 .hourly-list {
     display: flex;
     overflow-x: auto;
     gap: var(--space-sm);
     padding-bottom: var(--space-sm);
     position: relative;
-    
-    /* Smooth scrolling for better UX */
     scroll-behavior: smooth;
-    
-    /* Enable mouse wheel horizontal scroll */
     scrollbar-gutter: stable both-edges;
 }
 
-/* Show subtle gradient edges indicating more content exists */
 .hourly-list::before,
 .hourly-list::after {
     content: '';
@@ -252,7 +334,6 @@ header h1 {
     border-radius: 4px;
 }
 
-/* Keyboard navigation support */
 .hourly-item:focus {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -305,6 +386,7 @@ header h1 {
     font-style: italic;
 }
 
+/* === Footer === */
 footer {
     display: flex;
     justify-content: space-between;
