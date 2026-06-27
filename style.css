@@ -402,16 +402,22 @@ header h1 {
 
 .hourly-best-indicator {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    font-size: 1.1rem;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-    animation: bounce 2s infinite;
+    top: -14px;
+    right: -6px;
+    font-size: 1.6rem;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+    animation: float-wave 2.5s ease-in-out infinite;
+    z-index: 10;
 }
 
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+@keyframes float-wave {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg); 
+        opacity: 1;
+    }
+    50% { 
+        transform: translateY(-6px) rotate(5deg); 
+        opacity: 0.9;
 }
 
 .hourly-item {
@@ -419,7 +425,7 @@ header h1 {
     min-width: 70px;
     background: var(--color-card-bg);
     border-radius: var(--radius-sm);
-    padding: var(--space-sm);
+    padding: calc(var(--space-sm) + 8px) var(--space-xs); /* Extra top space */
     text-align: center;
     box-shadow: var(--shadow-subtle);
     position: relative;

@@ -442,7 +442,7 @@ function renderHourlyForecast(hourly, startIndex) {
         }
 
         item.innerHTML = `
-            ${bestIndices.includes(i) ? '<span class="hourly-best-indicator">⭐</span>' : ''}
+            ${bestIndices.includes(i) ? '<span class="hourly-best-indicator">🌊</span>' : ''}
             <div class="hourly-time">${formatHour(timeStr)}</div>
             <div class="hourly-wave">${waveHeight.toFixed(1)}m</div>
             <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>
