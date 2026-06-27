@@ -7,7 +7,7 @@
  * - Wind speed, direction, air temp (Weather API)
  * - Sea level height for tide calculation (Marine API)
  * - Sunrise/sunset times (Weather API daily)
- * - Daily summary banner (custom logic)
+ * - Enhanced daily summary banner with icons + badges
  * - Wind onshore/offshore indicator
  * - 24hr format, Spanish UI
  * ====================================================
@@ -18,15 +18,11 @@ const CONFIG = {
         lat: 14.43,
         lon: -91.70
     },
-    // Marine API: wave + sea level (tides)
     marineUrl: 'https://marine-api.open-meteo.com/v1/marine',
     marineParams: 'wave_height,wave_direction,wave_period,sea_level_height_msl',
-
-    // Weather API: wind + temp (hourly) + sunrise/sunset (daily)
     weatherUrl: 'https://api.open-meteo.com/v1/forecast',
     weatherParams: 'wind_speed_10m,temperature_2m,wind_direction_10m',
     weatherDailyParams: 'sunrise,sunset',
-    
     beachBearing: 225  // El Paredón faces ~SW
 };
 
@@ -100,12 +96,9 @@ function mergeData(marineData, weatherData) {
     const marineHourly = marineData.hourly;
     const weatherHourly = weatherData.hourly;
 
-    // Merge hourly weather fields into marine data
     marineHourly.wind_speed = weatherHourly.wind_speed_10m;
     marineHourly.temperature_2m = weatherHourly.temperature_2m;
     marineHourly.wind_direction = weatherHourly.wind_direction_10m;
-
-    // Merge daily sunrise/sunset
     marineData.daily = weatherData.daily;
 
     return marineData;
@@ -123,7 +116,7 @@ function updateUI(data, isCached = false) {
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
 
-    // Update top condition cards
+    // Top condition cards
     document.getElementById('wave-height').textContent =
         formatToDisplaySize(hourly.wave_height[currentHourIndex]);
 
@@ -146,17 +139,17 @@ function updateUI(data, isCached = false) {
     );
     updateWindHint(windType);
 
-    // NEW: Daily summary banner
+    // ENHANCED: Daily summary banner with icon + badges
     const summary = generateDailySummary(hourly, currentHourIndex, windType);
     updateSummaryBanner(summary);
 
-    // NEW: Tide times
+    // Tide times
     if (hourly.sea_level_height_msl) {
         const tides = calculateTideTimes(hourly.time, hourly.sea_level_height_msl, currentHourIndex);
         renderTideTimes(tides);
     }
 
-    // NEW: Sunrise/Sunset
+    // Sunrise/Sunset
     if (daily) {
         renderSunTimes(daily);
     }
@@ -167,13 +160,15 @@ function updateUI(data, isCached = false) {
 }
 
 /**
- * NEW: Generates a Spanish summary based on conditions
+ * Generates enhanced daily summary with detailed stats for badges
  */
 function generateDailySummary(hourly, currentIndex, windType) {
     const waveHeight = hourly.wave_height[currentIndex];
     const windSpeed = hourly.wind_speed[currentIndex];
+    const windDirection = hourly.wind_direction?.[currentIndex];
     
-    let waveDesc, windDesc, overallRating, summaryText;
+    let waveDesc, overallRating, summaryText;
+    const badges = [];
 
     // Wave description
     if (waveHeight >= 1.5) {
@@ -187,35 +182,46 @@ function generateDailySummary(hourly, currentIndex, windType) {
         overallRating = 'poor';
     }
 
-    // Wind description
+    // Wind descriptor
     if (windType) {
         if (windType.class === 'favorable') {
-            windDesc = 'viento offshore';
+            // Calculate approximate cardinal direction from degrees
+            const dirCardinal = getCardinalDirection(windDirection);
+            badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
         } else if (windType.class === 'challenging') {
-            windDesc = 'viento onshore';
+            const dirCardinal = getCardinalDirection(windDirection);
+            badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
         } else {
-            windDesc = 'ventolina suave';
+            badges.push('ventolina suave');
         }
-    } else {
-        windDesc = 'viento variable';
     }
 
-    // Combined summary
+    // Build combined summary text
     if (overallRating === 'good' && windType?.class === 'favorable') {
-        summaryText = `¡Excelentes condiciones! ${capitalize(waveDesc)} con ${windDesc}. ¡A surfear! 🏄`;
+        summaryText = `¡Excelentes condiciones! ${capitalize(waveDesc)}. Ideal para surfear.`;
     } else if (overallRating === 'good') {
-        summaryText = `Hay ${waveDesc} hoy, pero ${windDesc}. Podría estar picado.`;
+        summaryText = `Hay ${waveDesc} hoy. ${windType?.label === 'Viento de Mar' ? 'Oleaje picado.' : 'Revisa las otras condiciones.'}`;
     } else if (overallRating === 'moderate' && windType?.class !== 'challenging') {
-        summaryText = `${capitalize(waveDesc)} con ${windDesc}. Condiciones decentes.`;
+        summaryText = `${capitalize(waveDesc)} con viento manageable. Condiciones decentes.`;
     } else if (overallRating === 'moderate') {
-        summaryText = `${capitalize(waveDesc)}, pero ${windDesc}. Oleaje picado.`;
+        summaryText = `${capitalize(waveDesc)}, pero viento onshore. Oleaje menos limpio.`;
     } else if (overallRating === 'poor') {
-        summaryText = `${capitalize(waveDesc)} hoy con ${windDesc}. Día tranquilo.`;
+        summaryText = `${capitalize(waveDesc)} hoy. Perfecto para descansar o practicar paddling.`;
     } else {
-        summaryText = `Condiciones variables: ${waveDesc}, ${windDesc}.`;
+        summaryText = `Condiciones variables: ${waveDesc}.`;
     }
 
-    return { text: summaryText, rating: overallRating };
+    return { text: summaryText, rating: overallRating, badges };
+}
+
+/**
+ * Converts degrees to compass direction abbreviation
+ */
+function getCardinalDirection(degrees) {
+    if (!degrees) return '?';
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round((degrees % 360) / 45) % 8;
+    return dirs[index];
 }
 
 function capitalize(str) {
@@ -225,15 +231,34 @@ function capitalize(str) {
 function updateSummaryBanner(summary) {
     const banner = document.getElementById('summary-banner');
     const text = document.getElementById('summary-text');
+    const icon = document.getElementById('summary-icon');
+    const badgesContainer = document.getElementById('condition-badges');
     
+    // Set class for gradient/color
     banner.classList.remove('good', 'moderate', 'poor');
     banner.classList.add(summary.rating);
     text.textContent = summary.text;
+    
+    // Dynamic icon based on rating
+    const iconMap = {
+        good: '🏄',
+        moderate: '😎',
+        poor: '😴'
+    };
+    icon.textContent = iconMap[summary.rating] || '🏄';
+    
+    // Render badges
+    if (summary.badges && summary.badges.length > 0) {
+        badgesContainer.innerHTML = summary.badges.map(badge => `
+            <span class="badge">${badge}</span>
+        `).join('');
+    } else {
+        badgesContainer.innerHTML = '';
+    }
 }
 
 /**
- * NEW: Calculates high and low tide times from sea level data
- * Finds local maxima (high) and minima (low) in the next 24 hours
+ * Calculates high and low tide times from sea level data
  */
 function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
     const tides = [];
@@ -263,13 +288,12 @@ function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
         }
     }
 
-    // Sort chronologically and return first 4 (typically 2 highs + 2 lows per day)
     tides.sort((a, b) => new Date(a.time) - new Date(b.time));
     return tides.slice(0, 4);
 }
 
 /**
- * NEW: Renders tide times into the DOM
+ * Renders tide times into the DOM
  */
 function renderTideTimes(tides) {
     const container = document.getElementById('tide-times');
@@ -295,7 +319,7 @@ function renderTideTimes(tides) {
 }
 
 /**
- * NEW: Renders sunrise and sunset times
+ * Renders sunrise and sunset times
  */
 function renderSunTimes(daily) {
     const container = document.getElementById('sun-times');
@@ -321,7 +345,7 @@ function renderSunTimes(daily) {
 }
 
 /**
- * Determines if wind is favorable (offshore) or challenging (onshore)
+ * Determines if wind is favorable or challenging
  */
 function determineWindType(windDir, windSpeed) {
     if (!windDir || !windSpeed) return null;

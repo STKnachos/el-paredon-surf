@@ -43,34 +43,122 @@ body {
     padding: var(--space-md);
 }
 
-/* === NEW: Daily Summary Banner === */
+/* === ENHANCED: Daily Summary Banner === */
 .summary-banner {
-    background: linear-gradient(135deg, #0ea5e9, #0284c7);
-    color: white;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
     margin-bottom: var(--space-md);
-    text-align: center;
-    box-shadow: var(--shadow-subtle);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.summary-text {
-    font-size: 0.95rem;
-    font-weight: 500;
-    line-height: 1.4;
+.summary-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(14, 165, 233, 0.35);
 }
 
-/* Summary banner variants */
+/* Dynamic gradients based on conditions */
 .summary-banner.good {
     background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
 }
 
 .summary-banner.moderate {
     background: linear-gradient(135deg, #d97706, #f59e0b);
+    color: white;
 }
 
 .summary-banner.poor {
     background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: white;
+}
+
+/* Pulsing animation for icon */
+.summary-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.9;
+    }
+}
+
+.summary-content {
+    flex: 1;
+    z-index: 1;
+}
+
+.summary-text {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-bottom: var(--space-xs);
+}
+
+/* Floating condition badges */
+.condition-badges {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.725rem;
+    font-weight: 600;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: background 0.2s;
+}
+
+.badge:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Subtle glass overlay effect */
+.summary-banner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    pointer-events: none;
+}
+
+/* Decorative wave pattern in background */
+.summary-banner::before {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08), transparent 60%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* === Wind Hint Card === */
@@ -109,7 +197,7 @@ body {
     color: #8b5cf6;
 }
 
-/* === NEW: Tide & Sun Section === */
+/* === Tide & Sun Section === */
 .tide-sun-section {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -21,9 +21,15 @@
             <time datetime="" id="last-updated"></time>
         </header>
 
-        <!-- NEW: Daily Summary Banner -->
+        <!-- ENHANCED: Icon + Badge Banner -->
         <section class="summary-banner" id="summary-banner">
-            <p class="summary-text" id="summary-text">Cargando resumen...</p>
+            <span class="summary-icon" id="summary-icon">🏄</span>
+            <div class="summary-content">
+                <p class="summary-text" id="summary-text">Cargando resumen...</p>
+                <div class="condition-badges" id="condition-badges">
+                    <!-- JS will populate this -->
+                </div>
+            </div>
         </section>
 
         <section class="conditions-grid" aria-label="Condiciones actuales">
@@ -78,7 +84,6 @@
             <span class="hint-value" id="wind-type">--</span>
         </div>
 
-        <!-- NEW: Tide & Sun Info Section -->
         <section class="tide-sun-section">
             <div class="info-block tide-block">
                 <h3 class="info-title">🌊 Mareas</h3>
