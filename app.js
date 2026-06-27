@@ -7,8 +7,11 @@
  * - Wind speed, direction, air temp (Weather API)
  * - Sea level height for tide calculation (Marine API)
  * - Sunrise/sunset times (Weather API daily)
- * - Enhanced daily summary banner with icons + badges
- * - Wind onshore/offshore indicator
+ * - Water temperature from Marine API
+ * - Tide rising/falling status
+ * - Best window highlighting
+ * - Dark/light mode toggle
+ * - Compass directions displayed
  * - 24hr format, Spanish UI
  * ====================================================
  */
@@ -19,7 +22,8 @@ const CONFIG = {
         lon: -91.70
     },
     marineUrl: 'https://marine-api.open-meteo.com/v1/marine',
-    marineParams: 'wave_height,wave_direction,wave_period,sea_level_height_msl',
+    // ADDED: sea_surface_temperature to parameters
+    marineParams: 'wave_height,wave_direction,wave_period,sea_level_height_msl,sea_surface_temperature',
     weatherUrl: 'https://api.open-meteo.com/v1/forecast',
     weatherParams: 'wind_speed_10m,temperature_2m,wind_direction_10m',
     weatherDailyParams: 'sunrise,sunset'
@@ -33,10 +37,10 @@ let lastUpdatedTimestamp = null;
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏄 App de pronóstico inicializada');
+    loadThemePreference();
     initializeLastUpdatedDisplay();
     attachEventListeners();
     loadData();
-    setupHorizontalScroll();
 });
 
 async function loadData() {
@@ -111,6 +115,9 @@ function updateUI(data, isCached = false) {
         lastUpdatedTimestamp = new Date();
         document.getElementById('last-updated').textContent =
             `Actualizado: ${formatTime(lastUpdatedTimestamp)}`;
+        
+        // NEW: Update freshness badge
+        updateFreshnessBadge(new Date());
     }
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
@@ -125,8 +132,19 @@ function updateUI(data, isCached = false) {
     document.getElementById('air-temp').textContent =
         Math.round(hourly.temperature_2m[currentHourIndex]).toString();
 
+    // WATER TEMP DISPLAY (NEW)
+    if (hourly.sea_surface_temperature?.[currentHourIndex] !== undefined) {
+        document.getElementById('water-temp').textContent =
+            Math.round(hourly.sea_surface_temperature[currentHourIndex]).toString();
+    } else {
+        document.getElementById('water-temp').textContent = '--';
+    }
+
+    // WAVE DIRECTION WITH COMPASS LABEL (ENHANCED)
+    const waveDirDegrees = Math.round(hourly.wave_direction?.[currentHourIndex]) || '--';
+    const waveDirCardinal = waveDirDegrees !== '--' ? getCardinalDirection(waveDirDegrees) : '-';
     document.getElementById('wave-direction').textContent =
-        `${Math.round(hourly.wave_direction?.[currentHourIndex]) || '--'}°`;
+        `${waveDirDegrees}° (${waveDirCardinal})`;
 
     document.getElementById('swell-period').textContent =
         `${hourly.wave_period?.[currentHourIndex]?.toFixed(1) || '--'} s`;
@@ -137,6 +155,9 @@ function updateUI(data, isCached = false) {
         hourly.wind_speed?.[currentHourIndex]
     );
     updateWindHint(windType);
+
+    // NEW: Tide status (rising/falling)
+    updateTideStatus(hourly, currentHourIndex);
 
     // Daily summary banner with icon + badges
     const summary = generateDailySummary(hourly, currentHourIndex, windType);
@@ -153,9 +174,66 @@ function updateUI(data, isCached = false) {
         renderSunTimes(daily);
     }
 
-    // Hourly forecast
+    // Hourly forecast with best window highlighting
     renderHourlyForecast(hourly, currentHourIndex);
     document.querySelector('.error-message')?.remove();
+}
+
+/**
+ * NEW: Calculate tide status (rising/falling)
+ */
+function updateTideStatus(hourly, currentIndex) {
+    const statusElement = document.getElementById('tide-status');
+    const statusIcon = document.getElementById('tide-status-icon');
+    const statusText = document.getElementById('tide-status-text');
+    
+    if (!hourly.sea_level_height_msl || !hourly.time) {
+        statusText.textContent = 'Datos no disponibles';
+        statusIcon.textContent = '⏳';
+        statusElement.className = 'tide-status tide-neutral';
+        return;
+    }
+    
+    const currentLevel = hourly.sea_level_height_msl[currentIndex];
+    const nextLevel = hourly.sea_level_height_msl[Math.min(currentIndex + 1, hourly.sea_level_height_msl.length - 1)];
+    
+    if (nextLevel > currentLevel) {
+        statusText.textContent = 'Marea subiendo';
+        statusIcon.textContent = '↑';
+        statusElement.className = 'tide-status tide-rising';
+    } else if (nextLevel < currentLevel) {
+        statusText.textContent = 'Marea bajando';
+        statusIcon.textContent = '↓';
+        statusElement.className = 'tide-status tide-falling';
+    } else {
+        statusText.textContent = 'Marea estable';
+        statusIcon.textContent = '•';
+        statusElement.className = 'tide-status tide-neutral';
+    }
+}
+
+/**
+ * NEW: Update data freshness indicator
+ */
+function updateFreshnessBadge(timestamp) {
+    const dot = document.getElementById('freshness-dot');
+    const text = document.getElementById('freshness-text');
+    
+    const now = new Date();
+    const diffHours = (now - timestamp) / (1000 * 60 * 60);
+    
+    dot.classList.remove('freshness-green', 'freshness-yellow', 'freshness-red');
+    
+    if (diffHours < 2) {
+        dot.classList.add('freshness-green');
+        text.textContent = 'Datos frescos ✓';
+    } else if (diffHours < 6) {
+        dot.classList.add('freshness-yellow');
+        text.textContent = 'Actualizado recientemente';
+    } else {
+        dot.classList.add('freshness-red');
+        text.textContent = 'Datos antiguos → Refrescar';
+    }
 }
 
 /**
@@ -181,17 +259,15 @@ function generateDailySummary(hourly, currentIndex, windType) {
         overallRating = 'poor';
     }
 
-    // Build wind badge — collapsed duplicate branches
-    if (windType) {
-        if (windType.class === 'moderate') {
-            badges.push('ventolina suave');
-        } else {
-            const dirCardinal = getCardinalDirection(windDirection);
-            badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
-        }
+    // Build wind badge
+    if (windType && windType.class !== 'moderate') {
+        const dirCardinal = getCardinalDirection(windDirection);
+        badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
+    } else if (windType) {
+        badges.push('ventolina suave');
     }
 
-    // Build summary text — fixed unreachable condition
+    // Build summary text
     if (overallRating === 'good' && windType?.class === 'favorable') {
         summaryText = `¡Excelentes condiciones! ${capitalize(waveDesc)}. Ideal para surfear.`;
     } else if (overallRating === 'good' && windType?.class === 'challenging') {
@@ -211,11 +287,8 @@ function generateDailySummary(hourly, currentIndex, windType) {
     return { text: summaryText, rating: overallRating, badges };
 }
 
-/**
- * Converts degrees to compass direction abbreviation
- */
 function getCardinalDirection(degrees) {
-    if (!degrees) return '?';
+    if (!degrees || degrees === '--') return '?';
     const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round((degrees % 360) / 45) % 8;
     return dirs[index];
@@ -235,25 +308,18 @@ function updateSummaryBanner(summary) {
     banner.classList.add(summary.rating);
     text.textContent = summary.text;
     
-    const iconMap = {
-        good: '🏄',
-        moderate: '😎',
-        poor: '😴'
-    };
+    const iconMap = { good: '🏄', moderate: '😎', poor: '😴' };
     icon.textContent = iconMap[summary.rating] || '🏄';
     
     if (summary.badges && summary.badges.length > 0) {
-        badgesContainer.innerHTML = summary.badges.map(badge => `
-            <span class="badge">${badge}</span>
-        `).join('');
+        badgesContainer.innerHTML = summary.badges.map(badge =>
+            `<span class="badge">${badge}</span>`
+        ).join('');
     } else {
         badgesContainer.innerHTML = '';
     }
 }
 
-/**
- * Calculates high and low tide times from sea level data
- */
 function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
     const tides = [];
     const endIndex = Math.min(startIndex + 24, timeArray.length);
@@ -319,12 +385,6 @@ function renderSunTimes(daily) {
     `;
 }
 
-/**
- * Determines if wind is favorable (offshore) or challenging (onshore)
- * El Paredón faces ~SW (225°), so:
- * - Wind from S-W (150-270°) = onshore (blowing from sea toward land)
- * - Wind from N-E (0-149°, 271-360°) = offshore (blowing from land toward sea)
- */
 function determineWindType(windDir, windSpeed) {
     if (!windDir || !windSpeed) return null;
 
@@ -351,11 +411,17 @@ function updateWindHint(windType) {
     }
 }
 
+/**
+ * ENHANCED: Render hourly forecast with best window highlighting
+ */
 function renderHourlyForecast(hourly, startIndex) {
     const container = document.getElementById('hourly-forecast');
     container.innerHTML = '';
 
     const endIndex = Math.min(startIndex + 10, hourly.time.length);
+    
+    // Find indices with best conditions for highlighting
+    const bestIndices = findBestWindows(hourly, startIndex, endIndex);
 
     for (let i = startIndex; i < endIndex; i++) {
         const timeStr = hourly.time[i];
@@ -364,21 +430,59 @@ function renderHourlyForecast(hourly, startIndex) {
 
         const item = document.createElement('div');
         item.className = 'hourly-item';
-        item.tabIndex = 0;
         
         const rating = getWaveRating(waveHeight);
         item.setAttribute('data-wave-rating', rating);
         item.setAttribute('role', 'button');
-        item.setAttribute('aria-label', `Pronóstico para las ${formatHour(timeStr)}: ${waveHeight.toFixed(1)} metros de oleaje`);
+        
+        // BEST WINDOW HIGHLIGHTING (NEW)
+        if (bestIndices.includes(i)) {
+            item.classList.add('best-window');
+            item.setAttribute('aria-label', `Mejor ventana - Pronóstico para las ${formatHour(timeStr)}`);
+        }
 
         item.innerHTML = `
+            ${bestIndices.includes(i) ? '<span class="hourly-best-indicator">⭐</span>' : ''}
             <div class="hourly-time">${formatHour(timeStr)}</div>
             <div class="hourly-wave">${waveHeight.toFixed(1)}m</div>
             <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>
-        `;
+        `.trim();
 
         container.appendChild(item);
     }
+}
+
+/**
+ * NEW: Identify best surfing windows based on wave + wind combo
+ */
+function findBestWindows(hourly, startIndex, endIndex) {
+    const bestScores = [];
+    
+    for (let i = startIndex; i < endIndex; i++) {
+        const waveHeight = hourly.wave_height[i] || 0;
+        const windSpeed = hourly.wind_speed[i] || 0;
+        const windDir = hourly.wind_direction?.[i] || 0;
+        
+        // Score: higher waves + lower wind + offshore = better
+        let score = waveHeight * 10;
+        
+        if (windSpeed < 15) score += 20;
+        else if (windSpeed < 25) score += 10;
+        
+        // Offshore bonus
+        if ((windDir >= 0 && windDir < 150) || (windDir > 270)) {
+            score += 15;
+        }
+        
+        bestScores.push({ index: i, score });
+    }
+    
+    // Sort by score descending
+    bestScores.sort((a, b) => b.score - a.score);
+    
+    // Return top 2-3 best hours (but at most 30% of visible hours)
+    const count = Math.max(2, Math.floor((endIndex - startIndex) * 0.3));
+    return bestScores.slice(0, count).map(x => x.index);
 }
 
 function formatHour(timeString) {
@@ -455,6 +559,33 @@ function initializeLastUpdatedDisplay() {
     }
 }
 
+// ============================================
+// DARK MODE TOGGLE FUNCTIONALITY (NEW)
+// ============================================
+
+function loadThemePreference() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateDarkModeButton(saved);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateDarkModeButton(next);
+}
+
+function updateDarkModeButton(theme) {
+    const btn = document.getElementById('dark-mode-toggle');
+    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    btn.setAttribute('aria-label', 
+        theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+    );
+}
+
 function attachEventListeners() {
     document.getElementById('refresh-btn').addEventListener('click', () => {
         localStorage.removeItem('surfCache');
@@ -466,22 +597,7 @@ function attachEventListeners() {
             btn.style.transform = '';
         }, 200);
     });
-}
-
-function setupHorizontalScroll() {
-    const list = document.querySelector('.hourly-list');
-    if (!list) return;
-
-    list.addEventListener('scroll', () => {
-        list.classList.toggle('scrolling-start', list.scrollLeft > 0);
-        list.classList.toggle('scrolling-end', 
-            list.scrollLeft + list.clientWidth < list.scrollWidth - 5);
-    });
-
-    list.addEventListener('wheel', (event) => {
-        if (event.shiftKey) {
-            event.preventDefault();
-            list.scrollBy({ left: event.deltaY, behavior: 'smooth' });
-        }
-    }, { passive: false });
+    
+    // NEW: Dark mode toggle listener
+    document.getElementById('dark-mode-toggle').addEventListener('click', toggleTheme);
 }

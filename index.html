@@ -16,10 +16,16 @@
 <body>
     <main class="container">
         <header>
-            <h1>🏄 El Paredón</h1>
-            <p class="subtitle">Guatemala • Costa Pacífica</p>
+            <h1>🏄 El Paredón, Guatemala</h1>
+            <p class="subtitle">Surf Report • Weather</p>
             <time datetime="" id="last-updated"></time>
         </header>
+
+        <!-- Data freshness indicator -->
+        <div class="freshness-badge" id="freshness-badge">
+            <span class="freshness-dot" id="freshness-dot"></span>
+            <span class="freshness-text" id="freshness-text">Verificando...</span>
+        </div>
 
         <!-- ENHANCED: Icon + Badge Banner -->
         <section class="summary-banner" id="summary-banner">
@@ -51,11 +57,21 @@
                 </div>
             </div>
             
-            <div class="card temp-card">
+            <div class="card temp-air-card">
                 <span class="icon">☀️</span>
                 <div class="card-content">
                     <p class="label">Temp. Aire</p>
                     <p class="value" id="air-temp">--</p>
+                    <p class="unit">°C</p>
+                </div>
+            </div>
+            
+            <!-- NEW: Water temperature card -->
+            <div class="card water-temp-card">
+                <span class="icon">🌡️</span>
+                <div class="card-content">
+                    <p class="label">Temp. Agua</p>
+                    <p class="value" id="water-temp">--</p>
                     <p class="unit">°C</p>
                 </div>
             </div>
@@ -66,7 +82,7 @@
                 <span class="detail-icon">➤</span>
                 <div>
                     <p class="detail-label">Dirección de Ola</p>
-                    <p class="detail-value" id="wave-direction">--°</p>
+                    <p class="detail-value" id="wave-direction">--° (--)</p>
                 </div>
             </div>
             
@@ -78,6 +94,12 @@
                 </div>
             </div>
         </section>
+
+        <!-- NEW: Tide status indicator -->
+        <div class="tide-status" id="tide-status">
+            <span class="tide-status-icon" id="tide-status-icon">⏳</span>
+            <span class="tide-status-text" id="tide-status-text">Calculando marea...</span>
+        </div>
 
         <div class="wind-hint" id="wind-hint">
             <span class="hint-label">🧭 Viento:</span>
@@ -109,7 +131,10 @@
 
         <footer>
             <small>Datos por <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></small>
-            <button class="refresh-btn" id="refresh-btn" aria-label="Actualizar pronóstico">↻ Actualizar</button>
+            <div class="footer-actions">
+                <button class="dark-mode-toggle" id="dark-mode-toggle" aria-label="Cambiar tema oscuro/claro">🌙</button>
+                <button class="refresh-btn" id="refresh-btn" aria-label="Actualizar pronóstico">↻ Actualizar</button>
+            </div>
         </footer>
     </main>
 
