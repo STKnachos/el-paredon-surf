@@ -237,6 +237,12 @@ header h1 {
     margin-bottom: var(--space-sm);
 }
 
+.sponsor-banner a {
+    display: inline-block;
+    text-decoration: none;
+    line-height: 0;
+}
+
 .sponsor-label {
     font-size: 0.75rem;
     color: var(--color-muted);
