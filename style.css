@@ -449,7 +449,7 @@ header h1 {
 
 .hourly-best-indicator {
     position: absolute;
-    top: -14px;
+    top: 4px;
     right: -6px;
     font-size: 1.6rem;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
@@ -473,8 +473,7 @@ header h1 {
     min-width: 70px;
     background: var(--color-card-bg);
     border-radius: var(--radius-sm);
-    /* Extra top padding to accommodate floating wave icon */
-    padding: calc(var(--space-sm) + 8px) var(--space-xs);
+    padding: var(--space-sm) var(--space-xs);
     text-align: center;
     box-shadow: var(--shadow-subtle);
     position: relative;
