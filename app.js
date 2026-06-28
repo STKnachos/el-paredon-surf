@@ -545,19 +545,20 @@ function getWaveRating(heightMeters) {
 }
 
 function getCurrentHourIndex(timeArray) {
-    const now = new Date();
+  const nowMs = Date.now();
 
-    for (let i = 0; i < timeArray.length; i++) {
-        const apiDate = new Date(timeArray[i]);
+  let bestIdx = 0;
+  let bestDiff = Infinity;
 
-        if (apiDate.getFullYear() === now.getFullYear() &&
-            apiDate.getMonth() === now.getMonth() &&
-            apiDate.getDate() === now.getDate()) {
-            return i;
-        }
+  for (let i = 0; i < timeArray.length; i++) {
+    const t = new Date(timeArray[i]).getTime();
+    const diff = Math.abs(t - nowMs);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
     }
-
-    return Math.floor(timeArray.length / 2);
+  }
+  return bestIdx;
 }
 
 function formatToDisplaySize(value) {
