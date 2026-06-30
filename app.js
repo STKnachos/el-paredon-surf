@@ -68,7 +68,7 @@ async function fetchMarineForecast() {
     const params = new URLSearchParams({
         latitude: CONFIG.location.lat,
         longitude: CONFIG.location.lon,
-        hourly: CONFIG.marineParams
+        hourly: CONFIG.marineParams,
         timezone: 'America/Guatemala'
     });
 
