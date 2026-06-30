@@ -1,10 +1,10 @@
 # 🏄 El Paredón Surf Forecast
 
-Personal surf and weather dashboard for El Paredón, Guatemala — a beach break on the Pacific coast. Built as a lightweight PWA with vanilla JavaScript, no frameworks, and no API keys.
+Personal surf and weather dashboard for El Paredón, Guatemala — a beach break on the Pacific coast. Built as a lightweight Progressive Web App (PWA) with vanilla JavaScript, no frameworks, and no API keys.
 
 ## Live Demo
-Visit the deployed app at:  
-https://stknachos.github.io/el-paredon-surf/
+Visit the deployed app at:    
+https://elparedonsurf.com/
 
 ## Features
 
@@ -30,20 +30,25 @@ https://stknachos.github.io/el-paredon-surf/
 - Spanish language interface (es-GT)
 - 24-hour time format
 - Dark/light mode toggle (saved per browser)
-- Progressive Web App (installable on mobile via "Add to Home Screen")
+- Progressively enhanced with responsive sponsor banner and clickable logo
 - Responsive design (mobile-first, adapts to tablet/desktop)
 - Horizontal scrollable hourly forecast (touch swipe on mobile, Shift + mouse wheel on desktop)
 - Local cache fallback when API is unavailable
 - Emoji favicon (🏄)
+- Installable as PWA via "Add to Home Screen"
+
+### Integrations
+- **Analytics**: Privacy-friendly tracking via Plausible.io
+- **Sponsorships**: Clickable logo linking to Instagram or partner website
+- **Custom Domain**: Configured for GitHub Pages deployment
 
 ## Tech Stack
 - **Frontend**: Vanilla HTML/CSS/JavaScript (no frameworks)
 - **APIs**: Open-Meteo Marine Weather API + Weather Forecast API
-- **Hosting**: GitHub Pages
+- **Hosting**: GitHub Pages (custom domain supported)
+- **Analytics**: Plausible.io (privacy-friendly, cookie-free)
 - **No build tools, no dependencies, no API keys required**
 
 ## API Sources
 - [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) — wave data, sea level height, water temperature
 - [Open-Meteo Forecast API](https://open-meteo.com/en/docs) — wind, air temperature, weather codes, sunrise/sunset
-
-## File Structure

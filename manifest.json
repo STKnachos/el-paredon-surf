@@ -1,8 +1,8 @@
 {
   "name": "El Paredón Surf",
   "short_name": "SurfGT",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "https://elparedonsurf.com/",
+  "scope": "https://elparedonsurf.com/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0ea5e9",
