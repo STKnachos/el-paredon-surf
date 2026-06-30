@@ -47,17 +47,30 @@
             <span class="freshness-text" id="freshness-text">Verificando...</span>
         </div>
 
-        <!-- ENHANCED: Icon + Badge Banner -->
-        <section class="summary-banner" id="summary-banner">
-            <span class="summary-icon" id="summary-icon">🏄</span>
-            <div class="summary-content">
-                <p class="summary-text" id="summary-text">Cargando resumen...</p>
-                <div class="condition-badges" id="condition-badges">
-                    <!-- JS will populate this -->
-                </div>
-            </div>
-        </section>
-
+<!-- UPDATED: Sleek dashboard-style summary -->
+<section class="summary-dashboard" id="summary-dashboard">
+    <div class="condition-rating">
+        <span class="dot good"></span>
+        <span class="dot good"></span>
+        <span class="dot good"></span>
+        <span class="dot mod"></span>
+        <span class="dot mod"></span>
+    </div>
+    
+    <div class="title-label">HOY</div>
+    
+    <!-- Mini wave sparkline (SVG will replace placeholder) -->
+    <svg class="wave-sparkline" id="wave-sparkline" viewBox="0 0 200 30">
+        <polyline points="" fill="none" stroke-width="2" />
+    </svg>
+    
+    <div class="stat-chips">
+        <span class="chip wave"><span class="icon">🌊</span><span class="value" id="dash-wave-height">--</span></span>
+        <span class="chip wind"><span class="icon">💨</span><span class="value" id="dash-wind-speed">--</span></span>
+        <span class="chip air-temp"><span class="icon">☀️</span><span class="value" id="dash-air-temp">--</span></span>
+        <span class="chip tide" id="dash-tide-status">--</span>
+    </div>
+</section>
         <section class="conditions-grid" aria-label="Condiciones actuales">
             <div class="card wave-card">
                 <span class="icon">🌊</span>

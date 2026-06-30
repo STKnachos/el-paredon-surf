@@ -167,6 +167,11 @@ function updateUI(data, isCached = false) {
     // Daily summary banner with icon + badges
     const summary = generateDailySummary(hourly, currentHourIndex, windType);
     updateSummaryBanner(summary);
+    // Draw sparkline
+    if (summary.allWaveHeights) {
+    const sparkline = document.getElementById('wave-sparkline');
+    drawSparkline(sparkline, summary.allWaveHeights);
+    }
 
     // Tide times
     if (hourly.sea_level_height_msl) {
@@ -247,49 +252,89 @@ function updateFreshnessBadge(timestamp) {
 function generateDailySummary(hourly, currentIndex, windType) {
     const waveHeight = hourly.wave_height[currentIndex];
     const windSpeed = hourly.wind_speed[currentIndex];
-    const windDirection = hourly.wind_direction?.[currentIndex];
+    const wavePeriod = hourly.wave_period?.[currentIndex] || '--';
+    const waterTemp = hourly.sea_surface_temperature?.[currentIndex] || '--';
+    const windDirection = hourly.wave_direction?.[currentIndex] || 0;
+    const cardinalDir = getCardinalDirection(windDirection);
     
-    let waveDesc, overallRating, summaryText;
-    const badges = [];
-
-    // Wave description
+    // Determine overall rating
+    let overallRating;
     if (waveHeight >= 1.5) {
-        waveDesc = 'olas grandes';
         overallRating = 'good';
     } else if (waveHeight >= 0.8) {
-        waveDesc = 'olas medianas';
         overallRating = 'moderate';
     } else {
-        waveDesc = 'olas pequeñas';
         overallRating = 'poor';
     }
+    
+    return { 
+        rating: overallRating, 
+        data: {
+            waveHeight: waveHeight.toFixed(1),
+            windSpeed: Math.round(windSpeed),
+            airTemp: Math.round(hourly.temperature_2m[currentIndex]),
+            tidalStatus: window.tidalStatus || '—',
+            direction: cardinalDir,
+            period: typeof wavePeriod === 'number' ? wavePeriod.toFixed(1) : '--',
+            waterTemp: typeof waterTemp === 'number' ? waterTemp.toFixed(1) : '--'
+        },
+        allWaveHeights: hourly.wave_height.slice(0, 24) // First 24 hours for sparkline
+    };
+}
 
-    // Build wind badge
-    if (windType && windType.class !== 'moderate') {
-        const dirCardinal = getCardinalDirection(windDirection);
-        badges.push(`${dirCardinal} @ ${Math.round(windSpeed)} km/h`);
-    } else if (windType) {
-        badges.push('ventolina suave');
-    }
+function updateDashboard(summary) {
+    const dashboard = document.getElementById('summary-dashboard');
+    dashboard.classList.remove('good', 'moderate', 'poor');
+    dashboard.classList.add(summary.rating);
+    
+    // Update dots
+    const dots = dashboard.querySelectorAll('.dot');
+    const filledCount = summary.rating === 'good' ? 5 : summary.rating === 'moderate' ? 3 : 1;
+    dots.forEach((dot, i) => {
+        dot.className = 'dot ' + (i < filledCount ? summary.rating : '');
+        dot.style.backgroundColor = summary.rating === 'good' ? 'var(--good-wave)' :
+                                    summary.rating === 'moderate' ? 'var(--moderate-wave)' : 
+                                    'var(--poor-wave)';
+    });
+    
+    // Update stats
+    document.getElementById('dash-wave-height').textContent = summary.data.waveHeight + 'm';
+    document.getElementById('dash-wind-speed').textContent = summary.data.windSpeed + ' km/h ' + summary.data.direction;
+    document.getElementById('dash-air-temp').textContent = summary.data.airTemp + '°C';
+    document.getElementById('dash-tide-status').innerHTML = '<span class="icon">' + 
+        (summary.data.tidalStatus.includes('subiendo') ? '↑' : '↓') + '</span>' + 
+        (summary.data.tidalStatus.split(' ')[0]);
+}
 
-    // Build summary text
-    if (overallRating === 'good' && windType?.class === 'favorable') {
-        summaryText = `¡Excelentes condiciones! ${capitalize(waveDesc)}. Ideal para surfear.`;
-    } else if (overallRating === 'good' && windType?.class === 'challenging') {
-        summaryText = `Hay ${waveDesc} hoy. Oleaje picado por viento onshore.`;
-    } else if (overallRating === 'good') {
-        summaryText = `Hay ${waveDesc} hoy. Revisa las otras condiciones.`;
-    } else if (overallRating === 'moderate' && windType?.class !== 'challenging') {
-        summaryText = `${capitalize(waveDesc)} con viento manejable. Condiciones decentes.`;
-    } else if (overallRating === 'moderate') {
-        summaryText = `${capitalize(waveDesc)}, pero viento onshore. Oleaje menos limpio.`;
-    } else if (overallRating === 'poor') {
-        summaryText = `${capitalize(waveDesc)} hoy. Perfecto para descansar o practicar paddling.`;
-    } else {
-        summaryText = `Condiciones variables: ${waveDesc}.`;
-    }
-
-    return { text: summaryText, rating: overallRating, badges };
+function drawSparkline(svgElement, waveData, maxVal = 2.5) {
+    if (!svgElement || !waveData || waveData.length === 0) return '';
+    
+    const width = svgElement.clientWidth || 200;
+    const height = 40;
+    const padding = 2;
+    
+    // Normalize wave heights to fit
+    const normalized = waveData.map(h => {
+        const normalizedH = h / maxVal;
+        return Math.max(0, Math.min(1, normalizedH));
+    });
+    
+    // Generate polyline points
+    const pointSpacing = (width - padding * 2) / (normalized.length - 1);
+    const points = normalized.map((val, idx) => {
+        const x = padding + idx * pointSpacing;
+        const y = height - (padding + val * (height - padding * 2));
+        return `${x},${y}`;
+    }).join(' ');
+    
+    svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svgElement.querySelector('polyline').setAttribute('points', points);
+    
+    // Color based on peak values
+    const peak = Math.max(...normalized);
+    const color = peak > 0.6 ? '#10b981' : peak > 0.3 ? '#f59e0b' : '#ef4444';
+    svgElement.querySelector('polyline').setAttribute('stroke', color);
+    svgElement.querySelector('polyline').setAttribute('fill', 'transparent');
 }
 
 function getCardinalDirection(degrees) {
