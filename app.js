@@ -127,14 +127,6 @@ function updateUI(data, isCached = false) {
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
 
-    // WATER TEMP DISPLAY (NEW)
-    if (hourly.sea_surface_temperature?.[currentHourIndex] !== undefined) {
-        document.getElementById('water-temp').textContent =
-            Math.round(hourly.sea_surface_temperature[currentHourIndex]).toString();
-    } else {
-        document.getElementById('water-temp').textContent = '--';
-    }
-
     // WAVE DIRECTION WITH COMPASS LABEL (ENHANCED)
     const waveDirDegrees = Math.round(hourly.wave_direction?.[currentHourIndex]) || '--';
     const waveDirCardinal = waveDirDegrees !== '--' ? getCardinalDirection(waveDirDegrees) : '-';
