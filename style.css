@@ -250,7 +250,7 @@ header h1 {
 }
 
 .sponsor-logo {
-    height: 50px;          /* Default size for mobile */
+    height: 70px;          /* Default size for mobile */
     width: auto;
     max-width: 120px;
     object-fit: contain;
