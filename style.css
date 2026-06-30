@@ -83,93 +83,87 @@ body {
 .freshness-yellow { background-color: var(--moderate-wave); }
 .freshness-red { background-color: var(--poor-wave); }
 
-/* === Summary Dashboard (NEW) === */
+/* === Summary Dashboard === */
 .summary-dashboard {
     background: var(--color-card-bg);
     border-radius: var(--radius-lg);
-    padding: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
     margin-bottom: var(--space-md);
     box-shadow: var(--shadow-subtle);
     position: relative;
     overflow: hidden;
+    transition: border-color 0.3s ease;
+}
+
+.dashboard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
 }
 
 .condition-rating {
     display: flex;
     gap: 4px;
-    margin-bottom: var(--space-sm);
 }
 
 .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: var(--color-border);
     transition: background-color 0.3s ease;
 }
 
 .dot.good { background-color: var(--good-wave); }
-.dot.mod { background-color: var(--moderate-wave); }
+.dot.moderate { background-color: var(--moderate-wave); }
 .dot.poor { background-color: var(--poor-wave); }
 
 .title-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--color-muted);
     letter-spacing: 1px;
-    margin-bottom: var(--space-xs);
     font-weight: 600;
 }
 
-.wave-sparkline {
+.wave-bar-chart {
     display: block;
     width: 100%;
-    height: 40px;
+    height: 50px;
     margin-bottom: var(--space-sm);
-    background: rgba(0, 0, 0, 0.03);
-    border-radius: var(--radius-sm);
-    padding: var(--space-xs) 0;
-}
-
-[data-theme="dark"] .wave-sparkline {
-    background: rgba(255, 255, 255, 0.05);
+    overflow: visible;
 }
 
 .stat-chips {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: var(--space-xs);
+    gap: 4px;
     flex-wrap: wrap;
 }
 
 .chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: var(--color-bg);
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 0.8rem;
+    gap: 3px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-text);
-    box-shadow: var(--shadow-subtle);
 }
 
-.chip .icon {
-    font-size: 1rem;
+.chip-icon {
+    font-size: 0.9rem;
+}
+
+.chip-value {
+    font-size: 0.8rem;
 }
 
 /* Dynamic border based on conditions */
-.summary-dashboard.good {
-    border-left: 6px solid var(--good-wave);
-}
+.summary-dashboard.good { border-left: 5px solid var(--good-wave); }
+.summary-dashboard.moderate { border-left: 5px solid var(--moderate-wave); }
+.summary-dashboard.poor { border-left: 5px solid var(--poor-wave); }
 
-.summary-dashboard.moderate {
-    border-left: 6px solid var(--moderate-wave);
-}
-
-.summary-dashboard.poor {
-    border-left: 6px solid var(--poor-wave);
-}
 /* === Tide Status Indicator === */
 .tide-status {
     display: flex;

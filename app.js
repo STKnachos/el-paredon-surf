@@ -127,16 +127,6 @@ function updateUI(data, isCached = false) {
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
 
-    // Top condition cards
-    document.getElementById('wave-height').textContent =
-        formatToDisplaySize(hourly.wave_height[currentHourIndex]);
-
-    document.getElementById('wind-speed').textContent =
-        Math.round(hourly.wind_speed[currentHourIndex]).toString();
-
-    document.getElementById('air-temp').textContent =
-        Math.round(hourly.temperature_2m[currentHourIndex]).toString();
-
     // WATER TEMP DISPLAY (NEW)
     if (hourly.sea_surface_temperature?.[currentHourIndex] !== undefined) {
         document.getElementById('water-temp').textContent =
@@ -165,15 +155,68 @@ function updateUI(data, isCached = false) {
     updateTideStatus(hourly, currentHourIndex);
 
     // Daily summary banner with icon + badges
-    const summary = generateDailySummary(hourly, currentHourIndex, windType);
+const summary = generateDailySummary(hourly, currentHourIndex, windType);
 updateDashboard(summary);
 
-// Draw sparkline
+// Draw bar chart
 if (summary.allWaveHeights) {
-    const sparkline = document.getElementById('wave-sparkline');
-    drawSparkline(sparkline, summary.allWaveHeights);
+    const chart = document.getElementById('wave-bar-chart');
+    drawBarChart(chart, summary.allWaveHeights);
 }
 
+/**
+ * Draws a 24-hour wave height bar chart in the dashboard
+ */
+function drawBarChart(svgElement, waveData) {
+    if (!svgElement || !waveData || waveData.length === 0) return;
+    
+    const svgNS = 'http://www.w3.org/2000/svg';
+    
+    // Clear existing content
+    while (svgElement.firstChild) {
+        svgElement.removeChild(svgElement.firstChild);
+    }
+    
+    const width = 280;
+    const height = 50;
+    const padding = 3;
+    const barGap = 1.5;
+    
+    // Dynamic scaling: use actual data range, not fixed max
+    const minVal = Math.min(...waveData);
+    const maxVal = Math.max(...waveData);
+    const range = Math.max(maxVal - minVal, 0.3); // Min 0.3m range for visual variation
+    
+    // Calculate bar width
+    const availableWidth = width - padding * 2;
+    const barWidth = (availableWidth - (barGap * (waveData.length - 1))) / waveData.length;
+    
+    waveData.forEach((h, idx) => {
+        // Normalize with dynamic scaling
+        const normalized = (h - minVal) / range;
+        const barHeight = Math.max(normalized * (height - padding * 2), 3);
+        
+        const x = padding + idx * (barWidth + barGap);
+        const y = height - padding - barHeight;
+        
+        const rect = document.createElementNS(svgNS, 'rect');
+        rect.setAttribute('x', x);
+        rect.setAttribute('y', y);
+        rect.setAttribute('width', barWidth);
+        rect.setAttribute('height', barHeight);
+        rect.setAttribute('rx', '1');
+        
+        // Color by rating
+        const rating = getWaveRating(h);
+        const color = rating === 'good' ? '#10b981' : 
+                      rating === 'moderate' ? '#f59e0b' : '#ef4444';
+        rect.setAttribute('fill', color);
+        
+        svgElement.appendChild(rect);
+    });
+    
+    svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
+}
     // Tide times
     if (hourly.sea_level_height_msl) {
         const tides = calculateTideTimes(hourly.time, hourly.sea_level_height_msl, currentHourIndex);
@@ -288,23 +331,22 @@ function updateDashboard(summary) {
     dashboard.classList.remove('good', 'moderate', 'poor');
     dashboard.classList.add(summary.rating);
     
-    // Update dots
+    // Update dots — NO inline styles, pure CSS classes
     const dots = dashboard.querySelectorAll('.dot');
-    const filledCount = summary.rating === 'good' ? 5 : summary.rating === 'moderate' ? 3 : 1;
+    const filledCount = summary.rating === 'good' ? 5 : 
+                        summary.rating === 'moderate' ? 3 : 1;
     dots.forEach((dot, i) => {
-        dot.className = 'dot ' + (i < filledCount ? summary.rating : '');
-        dot.style.backgroundColor = summary.rating === 'good' ? 'var(--good-wave)' :
-                                    summary.rating === 'moderate' ? 'var(--moderate-wave)' : 
-                                    'var(--poor-wave)';
+        dot.className = 'dot';
+        if (i < filledCount) {
+            dot.classList.add(summary.rating);
+        }
     });
     
     // Update stats
     document.getElementById('dash-wave-height').textContent = summary.data.waveHeight + 'm';
     document.getElementById('dash-wind-speed').textContent = summary.data.windSpeed + ' km/h ' + summary.data.direction;
+    document.getElementById('dash-water-temp').textContent = summary.data.waterTemp + '°C';
     document.getElementById('dash-air-temp').textContent = summary.data.airTemp + '°C';
-    document.getElementById('dash-tide-status').innerHTML = '<span class="icon">' + 
-        (summary.data.tidalStatus.includes('subiendo') ? '↑' : '↓') + '</span>' + 
-        (summary.data.tidalStatus.split(' ')[0]);
 }
 
 function drawSparkline(svgElement, waveData, maxVal = 2.5) {
