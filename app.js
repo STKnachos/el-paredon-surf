@@ -166,12 +166,13 @@ function updateUI(data, isCached = false) {
 
     // Daily summary banner with icon + badges
     const summary = generateDailySummary(hourly, currentHourIndex, windType);
-    updateSummaryBanner(summary);
-    // Draw sparkline
-    if (summary.allWaveHeights) {
+updateDashboard(summary);
+
+// Draw sparkline
+if (summary.allWaveHeights) {
     const sparkline = document.getElementById('wave-sparkline');
     drawSparkline(sparkline, summary.allWaveHeights);
-    }
+}
 
     // Tide times
     if (hourly.sea_level_height_msl) {
@@ -372,28 +373,6 @@ function getWeatherInfo(code) {
 
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function updateSummaryBanner(summary) {
-    const banner = document.getElementById('summary-banner');
-    const text = document.getElementById('summary-text');
-    const icon = document.getElementById('summary-icon');
-    const badgesContainer = document.getElementById('condition-badges');
-    
-    banner.classList.remove('good', 'moderate', 'poor');
-    banner.classList.add(summary.rating);
-    text.textContent = summary.text;
-    
-    const iconMap = { good: '🏄', moderate: '😎', poor: '😴' };
-    icon.textContent = iconMap[summary.rating] || '🏄';
-    
-    if (summary.badges && summary.badges.length > 0) {
-        badgesContainer.innerHTML = summary.badges.map(badge =>
-            `<span class="badge">${badge}</span>`
-        ).join('');
-    } else {
-        badgesContainer.innerHTML = '';
-    }
 }
 
 function calculateTideTimes(timeArray, seaLevelArray, startIndex) {
