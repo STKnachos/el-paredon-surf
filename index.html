@@ -25,6 +25,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://elparedonsurf.com/">
 <meta property="og:image" content="assets/naranjo-logo.png">
+<meta property="og:image" content="https://elparedonsurf.com/assets/naranjo-logo.png">
 </head>
 <body>
     <main class="container">
@@ -94,10 +95,10 @@
             </div>
         </section>
 
-        <!-- NEW: Tide status indicator -->
+        <!-- Tide cycle chart -->
         <div class="tide-status" id="tide-status">
-            <span class="tide-status-icon" id="tide-status-icon">⏳</span>
-            <span class="tide-status-text" id="tide-status-text">Calculando marea...</span>
+            <svg class="tide-bar-chart" id="tide-bar-chart"></svg>
+            <span class="tide-status-label" id="tide-status-text">Calculando marea...</span>
         </div>
 
         <div class="wind-hint" id="wind-hint">

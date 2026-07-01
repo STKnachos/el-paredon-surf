@@ -264,38 +264,119 @@ function loadUnitPreference() {
 
 
 /**
- * NEW: Calculate tide status (rising/falling)
+ * Draws a 24-hour tide cycle bar chart with current-position marker
  */
 function updateTideStatus(hourly, currentIndex) {
-    const statusElement = document.getElementById('tide-status');
-    const statusIcon = document.getElementById('tide-status-icon');
+    const svg = document.getElementById('tide-bar-chart');
     const statusText = document.getElementById('tide-status-text');
+    const statusElement = document.getElementById('tide-status');
     
     if (!hourly.sea_level_height_msl || !hourly.time) {
         statusText.textContent = 'Datos no disponibles';
-        statusIcon.textContent = '⏳';
         statusElement.className = 'tide-status tide-neutral';
         return;
     }
     
-    const currentLevel = hourly.sea_level_height_msl[currentIndex];
-    const nextLevel = hourly.sea_level_height_msl[Math.min(currentIndex + 1, hourly.sea_level_height_msl.length - 1)];
+    const seaLevels = hourly.sea_level_height_msl;
+    const slice = seaLevels.slice(0, 24);
+    
+    const svgNS = 'http://www.w3.org/2000/svg';
+    while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+    }
+    
+    const width = 280;
+    const height = 50;
+    const labelArea = 14;
+    const chartHeight = height - labelArea;
+    const padding = 3;
+    const barGap = 1.5;
+    
+    const minVal = Math.min(...slice);
+    const maxVal = Math.max(...slice);
+    const range = Math.max(maxVal - minVal, 0.3);
+    
+    const availableWidth = width - padding * 2;
+    const barWidth = (availableWidth - (barGap * (slice.length - 1))) / slice.length;
+    
+    // Draw tide bars — rising = blue, falling = lighter blue
+    slice.forEach((h, idx) => {
+        const normalized = (h - minVal) / range;
+        const barHeight = Math.max(normalized * (chartHeight - padding * 2), 3);
+        
+        const x = padding + idx * (barWidth + barGap);
+        const y = chartHeight - padding - barHeight;
+        
+        const rect = document.createElementNS(svgNS, 'rect');
+        rect.setAttribute('x', x);
+        rect.setAttribute('y', y);
+        rect.setAttribute('width', barWidth);
+        rect.setAttribute('height', barHeight);
+        rect.setAttribute('rx', '1');
+        
+        // Color based on rising/falling
+        const nextLevel = seaLevels[Math.min(idx + 1, seaLevels.length - 1)];
+        rect.setAttribute('fill', nextLevel > h ? '#0ea5e9' : '#7dd3fc');
+        
+        svg.appendChild(rect);
+    });
+    
+    // Vertical marker line at current hour
+    const markerIdx = Math.min(currentIndex, slice.length - 1);
+    if (markerIdx >= 0) {
+        const lineX = padding + markerIdx * (barWidth + barGap) + (barWidth / 2);
+        
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', lineX);
+        line.setAttribute('y1', 0);
+        line.setAttribute('x2', lineX);
+        line.setAttribute('y2', chartHeight);
+        line.setAttribute('stroke', '#ef4444');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-dasharray', '3,2');
+        svg.appendChild(line);
+    }
+    
+    // Time labels
+    const labelHours = [
+        { idx: 0, label: '00' },
+        { idx: 6, label: '06' },
+        { idx: 12, label: '12' },
+        { idx: 18, label: '18' },
+        { idx: 23, label: '24' }
+    ];
+    
+    labelHours.forEach(({ idx, label }) => {
+        if (idx >= slice.length) return;
+        const x = padding + idx * (barWidth + barGap) + (barWidth / 2);
+        
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', x);
+        text.setAttribute('y', height - 2);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '8');
+        text.setAttribute('fill', '#94a3b8');
+        text.textContent = label;
+        svg.appendChild(text);
+    });
+    
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    
+    // Set rising/falling text label below chart
+    const currentLevel = seaLevels[currentIndex];
+    const nextLevel = seaLevels[Math.min(currentIndex + 1, seaLevels.length - 1)];
     
     if (nextLevel > currentLevel) {
-        statusText.textContent = 'Marea subiendo';
-        statusIcon.textContent = '↑';
+        statusText.textContent = 'Marea subiendo ↑';
         statusElement.className = 'tide-status tide-rising';
     } else if (nextLevel < currentLevel) {
-        statusText.textContent = 'Marea bajando';
-        statusIcon.textContent = '↓';
+        statusText.textContent = 'Marea bajando ↓';
         statusElement.className = 'tide-status tide-falling';
     } else {
-        statusText.textContent = 'Marea estable';
-        statusIcon.textContent = '•';
+        statusText.textContent = 'Marea estable •';
         statusElement.className = 'tide-status tide-neutral';
     }
 }
-
 /**
  * NEW: Update data freshness indicator
  */
