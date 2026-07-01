@@ -516,7 +516,7 @@ header h1 {
     z-index: 1;
 }
 
-.dark-theme .hourly-item.best-window {
+[data-theme="dark"] .hourly-item.best-window {
     background: linear-gradient(135deg, #92400e, #b45309);
 }
 

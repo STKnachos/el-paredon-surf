@@ -382,37 +382,6 @@ function updateDashboard(summary) {
     document.getElementById('dash-air-temp').textContent = 
         formatWithUnit(parseInt(summary.data.airTemp), 'temp');}
 
-function drawSparkline(svgElement, waveData, maxVal = 2.5) {
-    if (!svgElement || !waveData || waveData.length === 0) return '';
-    
-    const width = svgElement.clientWidth || 200;
-    const height = 40;
-    const padding = 2;
-    
-    // Normalize wave heights to fit
-    const normalized = waveData.map(h => {
-        const normalizedH = h / maxVal;
-        return Math.max(0, Math.min(1, normalizedH));
-    });
-    
-    // Generate polyline points
-    const pointSpacing = (width - padding * 2) / (normalized.length - 1);
-    const points = normalized.map((val, idx) => {
-        const x = padding + idx * pointSpacing;
-        const y = height - (padding + val * (height - padding * 2));
-        return `${x},${y}`;
-    }).join(' ');
-    
-    svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    svgElement.querySelector('polyline').setAttribute('points', points);
-    
-    // Color based on peak values
-    const peak = Math.max(...normalized);
-    const color = peak > 0.6 ? '#10b981' : peak > 0.3 ? '#f59e0b' : '#ef4444';
-    svgElement.querySelector('polyline').setAttribute('stroke', color);
-    svgElement.querySelector('polyline').setAttribute('fill', 'transparent');
-}
-
 function getCardinalDirection(degrees) {
     if (!degrees || degrees === '--') return '?';
     const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -483,13 +452,13 @@ function renderTideTimes(tides) {
     container.innerHTML = tides.map(tide => {
         const time = formatHour(tide.time);
         const label = tide.type === 'high' ? 'Alta' : 'Baja';
-        const heightStr = tide.height.toFixed(2);
+        const heightStr = formatWithUnit(parseFloat(tide.height.toFixed(2)), 'tide');       
         const rowClass = tide.type === 'high' ? 'tide-high' : 'tide-low';
         
         return `
             <div class="tide-row ${rowClass}">
                 <span class="tide-label">${label}</span>
-                <span class="tide-time">${time} (${heightStr}m)</span>
+                <span class="tide-time">${time} (${heightStr})</span>
             </div>
         `;
     }).join('');
@@ -575,14 +544,13 @@ function renderHourlyForecast(hourly, startIndex) {
         }
 
         // UPDATED: Added weather icon row
-        item.innerHTML = `
-            ${bestIndices.includes(i) ? '<span class="hourly-best-indicator">🌊</span>' : ''}
-            <div class="hourly-weather">${weather.icon}</div>
-            <div class="hourly-time">${formatHour(timeStr)}</div>
-            <div class="hourly-wave">${waveHeight.toFixed(1)}m</div>
-            <div class="hourly-wind">${Math.round(windSpeed)} km/h</div>
-        `.trim();
-
+item.innerHTML = `
+    ${bestIndices.includes(i) ? '<span class="hourly-best-indicator">🌊</span>' : ''}
+    <div class="hourly-weather">${weather.icon}</div>
+    <div class="hourly-time">${formatHour(timeStr)}</div>
+    <div class="hourly-wave">${formatWithUnit(waveHeight, 'wave')}</div>
+    <div class="hourly-wind">${formatWithUnit(Math.round(windSpeed), 'wind')}</div>
+`.trim();
         container.appendChild(item);
     }
 }
@@ -661,19 +629,6 @@ function getCurrentHourIndex(timeArray) {
   return bestIdx;
 }
 
-function formatToDisplaySize(value) {
-    if (value < 0.3) return '<0.3';
-    return value.toFixed(1);
-}
-
-function formatTime(date) {
-    return date.toLocaleString('es-GT', {
-        weekday: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    });
-}
 function handleError(error) {
     console.error('Error obteniendo pronóstico:', error);
     const container = document.querySelector('.hourly-list');
@@ -743,6 +698,7 @@ function toggleUnits() {
 function updateUnitToggle() {
     const btn = document.getElementById('unit-toggle');
     btn.textContent = currentUnits === 'metric' ? 'METRIC' : 'IMPERIAL';
+    btn.classList.toggle('active', currentUnits === 'metric');
 }
 
 function updateDarkModeButton(theme) {
