@@ -128,14 +128,6 @@ function updateUI(data, isCached = false) {
         // NEW: Update freshness badge
         updateFreshnessBadge(new Date());
     }
-}
-
-    // Toggle switch for unit conversion
-function loadUnitPreference() {
-    const saved = localStorage.getItem('units') || 'metric';
-    currentUnits = saved;
-    updateUnitToggle();
-}
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
 
@@ -259,9 +251,17 @@ function drawBarChart(svgElement, waveData, timeArray) {
     }
 
     // Hourly forecast with best window highlighting
-    renderHourlyForecast(hourly, currentHourIndex);
+renderHourlyForecast(hourly, currentHourIndex);
     document.querySelector('.error-message')?.remove();
 }
+
+    // Toggle switch for unit conversion
+function loadUnitPreference() {
+    const saved = localStorage.getItem('units') || 'metric';
+    currentUnits = saved;
+    updateUnitToggle();
+}
+
 
 /**
  * NEW: Calculate tide status (rising/falling)
