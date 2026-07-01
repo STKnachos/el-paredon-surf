@@ -128,6 +128,7 @@ function updateUI(data, isCached = false) {
         // NEW: Update freshness badge
         updateFreshnessBadge(new Date());
     }
+}
 
     // Toggle switch for unit conversion
 function loadUnitPreference() {
