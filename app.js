@@ -10,12 +10,14 @@
  * - Water temperature from Marine API
  * - Tide rising/falling status
  * - Best window highlighting
+ * - Weather condition icons (☀️ ⛅ 🌧️ ⚡) in hourly cards
  * - Dark/light mode toggle
  * - Compass directions displayed
+ * - Metric/Imperial unit toggle
  * - 24hr format, Spanish UI
+ * - Daily summary dashboard with bar chart
  * ====================================================
  */
-
 const CONFIG = {
     location: {
         lat: 14.43,
