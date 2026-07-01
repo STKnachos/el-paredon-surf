@@ -90,6 +90,19 @@ body {
     margin-bottom: var(--space-sm);
 }
 
+.header-logo {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    margin-bottom: var(--space-xs);
+}
+
+@media (min-width: 600px) {
+    .header-logo {
+        max-width: 420px;
+    }
+}
+
 .unit-toggle {
     background: var(--color-card-bg);
     border: 2px solid var(--color-border);
