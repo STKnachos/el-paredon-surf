@@ -32,6 +32,7 @@ const CONFIG = {
 
 let cachedData = null;
 let lastUpdatedTimestamp = null;
+let currentUnits = 'metric';
 
 // ============================================
 // INITIALIZATION
@@ -39,6 +40,7 @@ let lastUpdatedTimestamp = null;
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏄 App de pronóstico inicializada');
     loadThemePreference();
+    loadUnitPreference();  // <-- ADD THIS LINE
     initializeLastUpdatedDisplay();
     attachEventListeners();
     loadData();
@@ -124,6 +126,13 @@ function updateUI(data, isCached = false) {
         // NEW: Update freshness badge
         updateFreshnessBadge(new Date());
     }
+
+    // Toggle switch for unit conversion
+function loadUnitPreference() {
+    const saved = localStorage.getItem('units') || 'metric';
+    currentUnits = saved;
+    updateUnitToggle();
+}
 
     const currentHourIndex = getCurrentHourIndex(hourly.time);
 
@@ -361,11 +370,14 @@ function updateDashboard(summary) {
     });
     
     // Update stats
-    document.getElementById('dash-wave-height').textContent = summary.data.waveHeight + 'm';
-    document.getElementById('dash-wind-speed').textContent = summary.data.windSpeed + ' km/h ' + summary.data.direction;
-    document.getElementById('dash-water-temp').textContent = summary.data.waterTemp + '°C';
-    document.getElementById('dash-air-temp').textContent = summary.data.airTemp + '°C';
-}
+    document.getElementById('dash-wave-height').textContent = 
+        formatWithUnit(parseFloat(summary.data.waveHeight), 'wave');
+    document.getElementById('dash-wind-speed').textContent = 
+        formatWithUnit(parseInt(summary.data.windSpeed), 'wind') + ' ' + summary.data.direction;
+    document.getElementById('dash-water-temp').textContent = 
+        formatWithUnit(parseFloat(summary.data.waterTemp), 'temp');
+    document.getElementById('dash-air-temp').textContent = 
+        formatWithUnit(parseInt(summary.data.airTemp), 'temp');}
 
 function drawSparkline(svgElement, waveData, maxVal = 2.5) {
     if (!svgElement || !waveData || waveData.length === 0) return '';
@@ -708,6 +720,28 @@ function toggleTheme() {
     updateDarkModeButton(next);
 }
 
+/**
+ * Toggles between metric and imperial units
+ */
+function toggleUnits() {
+    currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
+    localStorage.setItem('units', currentUnits);
+    updateUnitToggle();
+    
+    // Manually refresh all visible numbers without reloading API
+    if (cachedData) {
+        updateUI(cachedData, true);
+        updateFreshnessBadge(new Date());
+    } else {
+        loadData();
+    }
+}
+
+function updateUnitToggle() {
+    const btn = document.getElementById('unit-toggle');
+    btn.textContent = currentUnits === 'metric' ? 'METRIC' : 'IMPERIAL';
+}
+
 function updateDarkModeButton(theme) {
     const btn = document.getElementById('dark-mode-toggle');
     btn.textContent = theme === 'dark' ? '☀️' : '🌙';
@@ -728,6 +762,52 @@ function attachEventListeners() {
         }, 200);
     });
     
-    // NEW: Dark mode toggle listener
+    // Dark mode toggle listener
     document.getElementById('dark-mode-toggle').addEventListener('click', toggleTheme);
+    
+    // NEW: Unit toggle listener
+    document.getElementById('unit-toggle').addEventListener('click', toggleUnits);
+}
+/**
+ * Converts metric value to imperial based on type
+ */
+function toImperial(value, type) {
+    if (value === '--' || typeof value !== 'number') return '--';
+    switch (type) {
+        case 'wave':   return (value * 3.28084).toFixed(1);  // meters → feet
+        case 'wind':   return Math.round(value * 0.621371);  // km/h → mph
+        case 'temp':   return Math.round((value * 9/5) + 32); // Celsius → Fahrenheit
+        case 'tide':   return (value * 3.28084).toFixed(2); // meters → feet
+        default:       return value.toString();
+    }
+}
+
+/**
+ * Returns appropriate unit symbol
+ */
+function getUnitSymbol(type) {
+    if (currentUnits === 'metric') {
+        switch (type) {
+            case 'wave':   return 'm';
+            case 'wind':   return 'km/h';
+            case 'temp':   return '°C';
+            case 'tide':   return 'm';
+        }
+    } else {
+        switch (type) {
+            case 'wave':   return 'ft';
+            case 'wind':   return 'mph';
+            case 'temp':   return '°F';
+            case 'tide':   return 'ft';
+        }
+    }
+}
+
+/**
+ * Formats value with correct unit suffix
+ */
+function formatWithUnit(value, type) {
+    const raw = currentUnits === 'metric' ? value : toImperial(value, type);
+    const symbol = getUnitSymbol(type);
+    return `${raw}${symbol}`;
 }
