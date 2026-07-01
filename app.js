@@ -153,13 +153,12 @@ updateDashboard(summary);
 // Draw bar chart
 if (summary.allWaveHeights) {
     const chart = document.getElementById('wave-bar-chart');
-    drawBarChart(chart, summary.allWaveHeights);
-}
+drawBarChart(chart, summary.allWaveHeights, hourly.time.slice(0, 24));}
 
 /**
- * Draws a 24-hour wave height bar chart in the dashboard
+ * Draws a 24-hour wave height bar chart with time markers
  */
-function drawBarChart(svgElement, waveData) {
+function drawBarChart(svgElement, waveData, timeArray) {
     if (!svgElement || !waveData || waveData.length === 0) return;
     
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -171,13 +170,15 @@ function drawBarChart(svgElement, waveData) {
     
     const width = 280;
     const height = 50;
+    const labelArea = 14; // Space for time labels
+    const chartHeight = height - labelArea;
     const padding = 3;
     const barGap = 1.5;
     
-    // Dynamic scaling: use actual data range, not fixed max
+    // Dynamic scaling
     const minVal = Math.min(...waveData);
     const maxVal = Math.max(...waveData);
-    const range = Math.max(maxVal - minVal, 0.3); // Min 0.3m range for visual variation
+    const range = Math.max(maxVal - minVal, 0.3);
     
     // Calculate bar width
     const availableWidth = width - padding * 2;
@@ -186,10 +187,10 @@ function drawBarChart(svgElement, waveData) {
     waveData.forEach((h, idx) => {
         // Normalize with dynamic scaling
         const normalized = (h - minVal) / range;
-        const barHeight = Math.max(normalized * (height - padding * 2), 3);
+        const barHeight = Math.max(normalized * (chartHeight - padding * 2), 3);
         
         const x = padding + idx * (barWidth + barGap);
-        const y = height - padding - barHeight;
+        const y = chartHeight - padding - barHeight;
         
         const rect = document.createElementNS(svgNS, 'rect');
         rect.setAttribute('x', x);
@@ -207,6 +208,31 @@ function drawBarChart(svgElement, waveData) {
         svgElement.appendChild(rect);
     });
     
+       // Add time labels every 6 hours + 24 at the end
+    const labelHours = [
+        { idx: 0, label: '00' },
+        { idx: 6, label: '06' },
+        { idx: 12, label: '12' },
+        { idx: 18, label: '18' },
+        { idx: 23, label: '24' }
+    ];
+    
+    labelHours.forEach(({ idx, label }) => {
+        if (idx >= waveData.length) return;
+        
+        const x = padding + idx * (barWidth + barGap) + (barWidth / 2);
+        
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', x);
+        text.setAttribute('y', height - 2);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '8');
+        text.setAttribute('fill', '#94a3b8');
+        text.textContent = label;
+        svgElement.appendChild(text);
+    });
+    
+    // Update viewBox to include label area
     svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
 }
     // Tide times
