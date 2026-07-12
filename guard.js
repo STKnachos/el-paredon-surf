@@ -224,39 +224,41 @@ function drawBarChart(svgElement, waveData, currentIdx, type = 'wave') {
     const padding = 3;
     const barGap = 1.5;
 
-    const minVal = Math.min(...waveData);
-    const maxVal = Math.max(...waveData);
-    const range = Math.max(maxVal - minVal, 0.3);
+const minVal = Math.min(...waveData);
+const maxVal = Math.max(...waveData);
+const rawRange = maxVal - minVal;
+const minRangePercentage = 0.15; // 15% of max value as minimum range
+const range = Math.max(rawRange, minRangePercentage * maxVal);
 
-    const availableWidth = width - padding * 2;
-    const barWidth = (availableWidth - (barGap * (waveData.length - 1))) / waveData.length;
+const availableWidth = width - padding * 2;
+const barWidth = (availableWidth - (barGap * (waveData.length - 1))) / waveData.length;
 
-    waveData.forEach((h, idx) => {
-        const normalized = (h - minVal) / range;
-        const barHeight = Math.max(normalized * (chartHeight - padding * 2), 3);
-        const x = padding + idx * (barWidth + barGap);
-        const y = chartHeight - padding - barHeight;
+waveData.forEach((h, idx) => {
+    const normalized = (h - minVal) / range;
+    const barHeight = Math.max(normalized * (chartHeight - padding * 2), 3);
+    const x = padding + idx * (barWidth + barGap);
+    const y = chartHeight - padding - barHeight;
 
-        const rect = document.createElementNS(svgNS, 'rect');
-        rect.setAttribute('x', x);
-        rect.setAttribute('y', y);
-        rect.setAttribute('width', barWidth);
-        rect.setAttribute('height', barHeight);
-        rect.setAttribute('rx', '1');
+    const rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', barWidth);
+    rect.setAttribute('height', barHeight);
+    rect.setAttribute('rx', '1');
 
-        if (type === 'wave') {
-            const rating = h >= 1.5 ? 'good' : h >= 0.8 ? 'moderate' : 'poor';
-            rect.setAttribute('fill',
-                rating === 'good' ? '#10b981' :
-                rating === 'moderate' ? '#f59e0b' : '#ef4444');
-        } else {
-            // Tide: color by rising/falling
-            const next = waveData[Math.min(idx + 1, waveData.length - 1)];
-            rect.setAttribute('fill', next > h ? '#0ea5e9' : '#7dd3fc');
-        }
+    if (type === 'wave') {
+        const rating = h >= 1.5 ? 'good' : h >= 0.8 ? 'moderate' : 'poor';
+        rect.setAttribute('fill',
+            rating === 'good' ? '#10b981' :
+            rating === 'moderate' ? '#f59e0b' : '#ef4444');
+    } else {
+        // Tide: color by rising/falling
+        const next = waveData[Math.min(idx + 1, waveData.length - 1)];
+        rect.setAttribute('fill', next > h ? '#0ea5e9' : '#7dd3fc');
+    }
 
-        svgElement.appendChild(rect);
-    });
+    svgElement.appendChild(rect);
+});
 
     // Current hour marker
     if (currentIdx != null && currentIdx < waveData.length) {
