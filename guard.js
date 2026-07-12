@@ -28,7 +28,7 @@ function dualWave(meters) {
 }
 
 function dualWind(kmh) {
-    if (kh == null || isNaN(kmh)) return '--';
+    if (kmh == null || isNaN(kmh)) return '--';
     return `${Math.round(kmh)} km/h (${Math.round(kmh * 0.621371)} mph)`;
 }
 
