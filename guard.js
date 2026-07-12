@@ -164,12 +164,14 @@ function renderSnapshot(weather, marine) {
     const idx = getCurrentHourIndex(wHourly.time);
 
     document.getElementById('wave-height').innerHTML = dualWave(mHourly.wave_height?.[idx]);
-document.getElementById('wind-speed').innerHTML = dualWind(wHourly.wind_speed_10m?.[idx]);
-document.getElementById('air-temp').innerHTML = dualTemp(wHourly.temperature_2m?.[idx]);
-document.getElementById('dewpoint').innerHTML = dualTemp(wHourly.dew_point_2m?.[idx]);
-document.getElementById('visibility').innerHTML = dualDistance(wHourly.visibility?.[idx]);
-document.getElementById('heat-index').innerHTML = dualTemp(wHourly.apparent_temperature?.[idx]);
-document.getElementById('water-temp').innerHTML = dualTemp(mHourly.sea_surface_temperature?.[idx]);
+    document.getElementById('wind-speed').innerHTML = dualWind(wHourly.wind_speed_10m?.[idx]);
+    document.getElementById('air-temp').innerHTML = dualTemp(wHourly.temperature_2m?.[idx]);
+    document.getElementById('humidity').innerHTML =
+        `${wHourly.relative_humidity_2m?.[idx] ?? '--'}%`;
+    document.getElementById('barometer').innerHTML = dualPressure(wHourly.pressure_msl?.[idx]);
+    document.getElementById('dewpoint').innerHTML = dualTemp(wHourly.dew_point_2m?.[idx]);
+    document.getElementById('visibility').innerHTML = dualDistance(wHourly.visibility?.[idx]);
+    document.getElementById('heat-index').innerHTML = dualTemp(wHourly.apparent_temperature?.[idx]);
 }
 
 function renderOceanDetail(weather, marine) {
@@ -203,8 +205,8 @@ function renderOceanDetail(weather, marine) {
     windTypeEl.textContent = windLabel;
     windTypeEl.className = 'metric-value ' + windClass;
 
-    document.getElementById('water-temp').textContent =
-        dualTemp(mHourly.sea_surface_temperature?.[idx]);
+document.getElementById('water-temp').innerHTML =
+    dualTemp(mHourly.sea_surface_temperature?.[idx]);
 }
 
 function drawBarChart(svgElement, waveData, currentIdx, type = 'wave') {
