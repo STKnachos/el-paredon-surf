@@ -755,9 +755,17 @@ footer {
 }
 
 .metric-value {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--color-text);
+    line-height: 1.3;
+}
+
+.unit-secondary {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-muted);
+    white-space: nowrap;
 }
 
 .metric-value.favorable { color: var(--good-wave); }
@@ -797,6 +805,45 @@ footer {
     grid-template-columns: 1fr 1fr;
     gap: var(--space-sm);
     margin-bottom: var(--space-lg);
+}
+
+/* Daily Periods */
+.daily-periods-list {
+    display: flex;
+    overflow-x: auto;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+}
+
+.period-card {
+    flex-shrink: 0;
+    min-width: 80px;
+    background: var(--color-card-bg);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    text-align: center;
+    box-shadow: var(--shadow-subtle);
+    font-size: 0.7rem;
+}
+
+.period-time {
+    font-weight: 700;
+    color: var(--color-muted);
+    margin-bottom: 4px;
+}
+
+.period-icon {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+}
+
+.period-wave,
+.period-wind,
+.period-temp {
+    font-size: 0.65rem;
+    color: var(--color-text);
+    margin-bottom: 2px;
 }
 
 /* 5-Day Forecast */
@@ -968,4 +1015,51 @@ footer a {
     .guard-tide-sun {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* Tide times inline below chart */
+.tide-times-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-sm);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--color-border);
+}
+
+.tide-times-inline .tide-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+}
+
+/* Sun times full width */
+.guard-sun {
+    margin-bottom: var(--space-lg);
+}
+
+.sun-fullwidth .sun-row-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.sun-fullwidth .sun-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.sun-fullwidth .sun-label {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+}
+
+.sun-fullwidth .sun-time {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
 }

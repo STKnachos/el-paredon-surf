@@ -112,21 +112,29 @@
             </div>
         </section>
 
-        <!-- SECTION 3: Charts -->
-        <section class="guard-charts">
-            <h2 class="section-title">Gráficas (24 horas)</h2>
-            
-            <div class="chart-block">
-                <h3>🌊 Altura de Ola</h3>
-                <svg class="wave-bar-chart" id="wave-bar-chart"></svg>
-            </div>
-            
-            <div class="chart-block">
-                <h3>💧 Ciclo de Marea</h3>
-                <svg class="tide-bar-chart" id="tide-bar-chart"></svg>
-            </div>
-        </section>
+<!-- SECTION: Charts (tide times integrated into tide chart card) -->
+<section class="guard-charts">
+    <h2 class="section-title">Gráficas (24 horas)</h2>
+    
+    <div class="chart-block">
+        <h3>🌊 Altura de Ola</h3>
+        <svg class="wave-bar-chart" id="wave-bar-chart"></svg>
+    </div>
+    
+    <div class="chart-block">
+        <h3>💧 Ciclo de Marea</h3>
+        <svg class="tide-bar-chart" id="tide-bar-chart"></svg>
+        <div id="tide-times" class="tide-times-inline"></div>
+    </div>
+</section>
 
+<!-- SECTION: Sun Times (full width) -->
+<section class="guard-sun">
+    <div class="chart-block sun-fullwidth">
+        <h3>☀️ Horario Solar</h3>
+        <div class="sun-row-container" id="sun-times"></div>
+    </div>
+</section>
         <!-- SECTION 4: Tide & Sun Times -->
         <section class="guard-tide-sun">
             <div class="info-block">
@@ -142,6 +150,14 @@
                 </div>
             </div>
         </section>
+
+        <!-- Daily Forecast by Period -->
+<section class="guard-daily-periods">
+    <h2 class="section-title">Pronóstico de Hoy</h2>
+    <div class="daily-periods-list" id="daily-periods-list">
+        <p class="info-loading">Cargando...</p>
+    </div>
+</section>
 
         <!-- SECTION 5: 5-Day Forecast -->
         <section class="guard-forecast">

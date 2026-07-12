@@ -24,30 +24,30 @@ const GUARD_CONFIG = {
 
 function dualWave(meters) {
     if (meters == null || isNaN(meters)) return '--';
-    return `${meters.toFixed(1)}m (${(meters * 3.28084).toFixed(1)}ft)`;
+    return `${meters.toFixed(1)}m <span class="unit-secondary">(${(meters * 3.28084).toFixed(1)}ft)</span>`;
 }
 
 function dualWind(kmh) {
     if (kmh == null || isNaN(kmh)) return '--';
-    return `${Math.round(kmh)} km/h (${Math.round(kmh * 0.621371)} mph)`;
+    return `${Math.round(kmh)} km/h <span class="unit-secondary">(${Math.round(kmh * 0.621371)} mph)</span>`;
 }
 
 function dualTemp(celsius) {
     if (celsius == null || isNaN(celsius)) return '--';
-    return `${Math.round(celsius)}°C (${Math.round((celsius * 9/5) + 32)}°F)`;
+    return `${Math.round(celsius)}°C <span class="unit-secondary">(${Math.round((celsius * 9/5) + 32)}°F)</span>`;
 }
 
 function dualPressure(mb) {
     if (mb == null || isNaN(mb)) return '--';
     const inches = (mb * 0.02953).toFixed(2);
-    return `${Math.round(mb)} mb (${inches} in)`;
+    return `${Math.round(mb)} mb <span class="unit-secondary">(${inches} in)</span>`;
 }
 
 function dualDistance(meters) {
     if (meters == null || isNaN(meters)) return '--';
     const km = (meters / 1000).toFixed(1);
     const miles = (meters / 1609.34).toFixed(1);
-    return `${km} km (${miles} mi)`;
+    return `${km} km <span class="unit-secondary">(${miles} mi)</span>`;
 }
 
 function getCardinalDirection(degrees) {
@@ -163,22 +163,13 @@ function renderSnapshot(weather, marine) {
     const mHourly = marine.hourly;
     const idx = getCurrentHourIndex(wHourly.time);
 
-    document.getElementById('wave-height').textContent =
-        dualWave(mHourly.wave_height?.[idx]);
-    document.getElementById('wind-speed').textContent =
-        dualWind(wHourly.wind_speed_10m?.[idx]);
-    document.getElementById('air-temp').textContent =
-        dualTemp(wHourly.temperature_2m?.[idx]);
-    document.getElementById('humidity').textContent =
-        `${wHourly.relative_humidity_2m?.[idx] ?? '--'}%`;
-    document.getElementById('barometer').textContent =
-        dualPressure(wHourly.pressure_msl?.[idx]);
-    document.getElementById('dewpoint').textContent =
-        dualTemp(wHourly.dew_point_2m?.[idx]);
-    document.getElementById('visibility').textContent =
-        dualDistance(wHourly.visibility?.[idx]);
-    document.getElementById('heat-index').textContent =
-        dualTemp(wHourly.apparent_temperature?.[idx]);
+    document.getElementById('wave-height').innerHTML = dualWave(mHourly.wave_height?.[idx]);
+document.getElementById('wind-speed').innerHTML = dualWind(wHourly.wind_speed_10m?.[idx]);
+document.getElementById('air-temp').innerHTML = dualTemp(wHourly.temperature_2m?.[idx]);
+document.getElementById('dewpoint').innerHTML = dualTemp(wHourly.dew_point_2m?.[idx]);
+document.getElementById('visibility').innerHTML = dualDistance(wHourly.visibility?.[idx]);
+document.getElementById('heat-index').innerHTML = dualTemp(wHourly.apparent_temperature?.[idx]);
+document.getElementById('water-temp').innerHTML = dualTemp(mHourly.sea_surface_temperature?.[idx]);
 }
 
 function renderOceanDetail(weather, marine) {
@@ -327,12 +318,11 @@ function renderTideTimes(timeArray, seaLevelArray, startIndex) {
 
     container.innerHTML = tides.slice(0, 4).map(tide => {
         const label = tide.type === 'high' ? 'Alta' : 'Baja';
-        const ftStr = (tide.height * 3.28084).toFixed(1);
         const rowClass = tide.type === 'high' ? 'tide-high' : 'tide-low';
         return `
             <div class="tide-row ${rowClass}">
                 <span class="tide-label">${label}</span>
-                <span class="tide-time">${formatHour(tide.time)} (${tide.height.toFixed(2)}m / ${ftStr}ft)</span>
+                <span class="tide-time">${formatHour(tide.time)} ${tide.height.toFixed(2)}m <span class="unit-secondary">(${(tide.height * 3.28084).toFixed(1)}ft)</span></span>
             </div>
         `;
     }).join('');
@@ -354,6 +344,57 @@ function renderSunTimes(daily) {
             <span class="sun-time">${formatHour(daily.sunset[0])}</span>
         </div>
     `;
+}
+
+function renderDailyPeriods(weather, marine) {
+    const container = document.getElementById('daily-periods-list');
+    const wHourly = weather.hourly;
+    const mHourly = marine.hourly;
+    const idx = getCurrentHourIndex(wHourly.time);
+
+    // Target hours: 00, 06, 12, 18, 23(≈24)
+    const targetHours = [0, 6, 12, 18, 23];
+    const periods = [];
+
+    targetHours.forEach(targetHr => {
+        // Find the hour closest to this target, starting from current index
+        for (let i = idx; i < wHourly.time.length; i++) {
+            const hour = new Date(wHourly.time[i]).getHours();
+            if (hour === targetHr || (targetHr === 23 && hour === 23)) {
+                periods.push({ index: i, label: targetHr === 23 ? '24' : String(targetHr).padStart(2, '0') });
+                break;
+            }
+        }
+    });
+
+    if (periods.length === 0) {
+        container.innerHTML = '<p class="info-loading">No disponible</p>';
+        return;
+    }
+
+    container.innerHTML = periods.map(p => {
+        const weather = WEATHER_MAP[wHourly.weathercode?.[p.index]] || { text: '--', icon: '❓' };
+        const wave = mHourly.wave_height?.[p.index];
+        const wind = wHourly.wind_speed_10m?.[p.index];
+        const temp = wHourly.temperature_2m?.[p.index];
+        const windDir = wHourly.wind_direction_10m?.[p.index];
+        const cardinal = getCardinalDirection(windDir);
+
+        // Rating color
+        const rating = wave >= 1.5 ? 'good' : wave >= 0.8 ? 'moderate' : 'poor';
+        const borderColor = rating === 'good' ? 'var(--good-wave)' :
+                           rating === 'moderate' ? 'var(--moderate-wave)' : 'var(--poor-wave)';
+
+        return `
+            <div class="period-card" style="border-left: 4px solid ${borderColor};">
+                <div class="period-time">${p.label}:00</div>
+                <div class="period-icon">${weather.icon}</div>
+                <div class="period-wave">🌊 ${wave != null ? wave.toFixed(1) : '--'}m</div>
+                <div class="period-wind">💨 ${Math.round(wind || 0)} ${cardinal}</div>
+                <div class="period-temp">🌡️ ${temp != null ? Math.round(temp) : '--'}°C</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderFiveDayForecast(daily) {
@@ -534,6 +575,9 @@ async function loadGuardReport() {
         // Tide & Sun
         renderTideTimes(marine.hourly.time, marine.hourly.sea_level_height_msl, idx);
         renderSunTimes(weather.daily);
+
+        // Daily periods forecast
+        renderDailyPeriods(weather, marine);
 
         // 5-day forecast
         renderFiveDayForecast(weather.daily);
