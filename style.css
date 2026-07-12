@@ -693,3 +693,279 @@ footer {
         grid-template-columns: repeat(4, 1fr);
     }
 }
+
+/* ============================================ */
+/* GUARD PAGE STYLES                            */
+/* ============================================ */
+
+.page-nav {
+    margin-bottom: var(--space-sm);
+}
+
+.page-nav a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-xs);
+    border-bottom: 2px solid var(--color-border);
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.metric-card {
+    background: var(--color-card-bg);
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-subtle);
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-raised);
+}
+
+.metric-icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: var(--space-xs);
+}
+
+.metric-label {
+    font-size: 0.65rem;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.metric-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.metric-value.favorable { color: var(--good-wave); }
+.metric-value.challenging { color: var(--moderate-wave); }
+.metric-value.moderate { color: #8b5cf6; }
+
+/* Chart Blocks */
+.guard-charts {
+    margin-bottom: var(--space-lg);
+}
+
+.chart-block {
+    background: var(--color-card-bg);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    box-shadow: var(--shadow-subtle);
+}
+
+.chart-block h3 {
+    font-size: 0.85rem;
+    color: var(--color-text);
+    margin-bottom: var(--space-xs);
+}
+
+.chart-block .wave-bar-chart,
+.chart-block .tide-bar-chart {
+    display: block;
+    width: 100%;
+    height: 60px;
+    overflow: visible;
+}
+
+/* Tide & Sun (reuse existing tide-sun-section) */
+.guard-tide-sun {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+/* 5-Day Forecast */
+.forecast-list {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-xs);
+    margin-bottom: var(--space-lg);
+}
+
+.forecast-day {
+    background: var(--color-card-bg);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    text-align: center;
+    box-shadow: var(--shadow-subtle);
+    font-size: 0.7rem;
+}
+
+.forecast-date {
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+    text-transform: capitalize;
+}
+
+.forecast-icon {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+}
+
+.forecast-desc {
+    font-size: 0.6rem;
+    color: var(--color-muted);
+    margin-bottom: 4px;
+    line-height: 1.1;
+}
+
+.forecast-temps {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.forecast-wind,
+.forecast-precip {
+    font-size: 0.6rem;
+    color: var(--color-muted);
+}
+
+/* Weather Events */
+.events-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: var(--space-lg);
+}
+
+.events-list li {
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+.event-icon {
+    font-size: 1rem;
+    margin-right: var(--space-xs);
+}
+
+/* Marine Hazard Section */
+.guard-hazards {
+    background: var(--color-card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-subtle);
+}
+
+.hazard-display {
+    text-align: center;
+    margin-bottom: var(--space-md);
+}
+
+.hazard-badge {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+}
+
+.hazard-badge.hazard-none {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--good-wave);
+}
+
+.hazard-badge.hazard-low {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--moderate-wave);
+}
+
+.hazard-badge.hazard-medium {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+}
+
+.hazard-badge.hazard-high {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--poor-wave);
+}
+
+.hazard-summary {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    font-style: italic;
+}
+
+.hazard-edit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.hazard-edit label {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hazard-edit select,
+.hazard-edit textarea {
+    width: 100%;
+    padding: var(--space-xs);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+.hazard-edit select:focus,
+.hazard-edit textarea:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+/* Footer */
+footer {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+/* Responsive */
+@media (min-width: 600px) {
+    .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .guard-tide-sun {
+        grid-template-columns: 1fr 1fr;
+    }
+}
