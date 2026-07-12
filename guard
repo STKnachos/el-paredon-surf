@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Guardia | El Paredón</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏄</text></svg>">
+
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="preconnect" href="https://marine-api.open-meteo.com">
+    <link rel="preconnect" href="https://api.open-meteo.com">
+    <link rel="canonical" href="https://elparedonsurf.com/guard">
+    
+    <!-- Privacy-friendly analytics -->
+    <script async defer src="https://plausible.io/js/pa--V43gFqWr1mHMRuWJOmDC.js"></script>
+</head>
+<body>
+    <main class="container">
+        <header>
+            <img src="assets/ElParedonSRBanner.png" alt="El Paredón Surf Report" class="header-logo">
+            <nav class="page-nav">
+                <a href="index.html">← Dashboard Principal</a>
+            </nav>
+            <h1>🛟 Informe de Guardia</h1>
+            <time datetime="" id="last-updated">Cargando...</time>
+        </header>
+
+        <!-- Header controls -->
+        <div class="header-controls">
+            <div class="freshness-badge" id="freshness-badge">
+                <span class="freshness-dot" id="freshness-dot"></span>
+                <span class="freshness-text" id="freshness-text">Verificando...</span>
+            </div>
+            <button class="refresh-btn" id="refresh-btn">↻ Actualizar</button>
+        </div>
+
+        <!-- SECTION 1: Current Conditions Snapshot -->
+        <section class="guard-snapshot">
+            <h2 class="section-title">Condiciones Actuales</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span class="metric-icon">🌊</span>
+                    <p class="metric-label">Altura de Ola</p>
+                    <p class="metric-value" id="wave-height">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">💨</span>
+                    <p class="metric-label">Velocidad del Viento</p>
+                    <p class="metric-value" id="wind-speed">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">🌡️</span>
+                    <p class="metric-label">Temperatura</p>
+                    <p class="metric-value" id="air-temp">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">💧</span>
+                    <p class="metric-label">Humedad</p>
+                    <p class="metric-value" id="humidity">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">⏲️</span>
+                    <p class="metric-label">Presión Barométrica</p>
+                    <p class="metric-value" id="barometer">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">❄️</span>
+                    <p class="metric-label">Punto de Rocío</p>
+                    <p class="metric-value" id="dewpoint">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">👁️</span>
+                    <p class="metric-label">Visibilidad</p>
+                    <p class="metric-value" id="visibility">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">🔥</span>
+                    <p class="metric-label">Sensación Térmica</p>
+                    <p class="metric-value" id="heat-index">--</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Ocean & Wind Detail -->
+        <section class="guard-ocean">
+            <h2 class="section-title">Detalle Oceánico</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span class="metric-icon">➤</span>
+                    <p class="metric-label">Dirección de Ola</p>
+                    <p class="metric-value" id="wave-direction">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">⏱️</span>
+                    <p class="metric-label">Período de Oleaje</p>
+                    <p class="metric-value" id="wave-period">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">🧭</span>
+                    <p class="metric-label">Tipo de Viento</p>
+                    <p class="metric-value" id="wind-type">--</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-icon">🌡️</span>
+                    <p class="metric-label">Temp. del Agua</p>
+                    <p class="metric-value" id="water-temp">--</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Charts -->
+        <section class="guard-charts">
+            <h2 class="section-title">Gráficas (24 horas)</h2>
+            
+            <div class="chart-block">
+                <h3>🌊 Altura de Ola</h3>
+                <svg class="wave-bar-chart" id="wave-bar-chart"></svg>
+            </div>
+            
+            <div class="chart-block">
+                <h3>💧 Ciclo de Marea</h3>
+                <svg class="tide-bar-chart" id="tide-bar-chart"></svg>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Tide & Sun Times -->
+        <section class="guard-tide-sun">
+            <div class="info-block">
+                <h3 class="info-title">🌊 Mareas</h3>
+                <div id="tide-times" class="tide-times">
+                    <p class="info-loading">Cargando...</p>
+                </div>
+            </div>
+            <div class="info-block">
+                <h3 class="info-title">☀️ Sol</h3>
+                <div id="sun-times" class="sun-times">
+                    <p class="info-loading">Cargando...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: 5-Day Forecast -->
+        <section class="guard-forecast">
+            <h2 class="section-title">Pronóstico 5 Días</h2>
+            <div class="forecast-list" id="forecast-list">
+                <p class="info-loading">Cargando pronóstico...</p>
+            </div>
+        </section>
+
+        <!-- SECTION 6: Weather Events -->
+        <section class="guard-events">
+            <h2 class="section-title">Eventos Climáticos (24 horas)</h2>
+            <ul class="events-list" id="weather-events">
+                <li class="info-loading">Analizando...</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 7: Marine Hazard Level -->
+        <section class="guard-hazards" id="hazard-section">
+            <h2 class="section-title">⚠️ Nivel de Peligro Marino</h2>
+            
+            <div class="hazard-display">
+                <div class="hazard-badge" id="hazard-badge">--</div>
+                <p class="hazard-summary" id="hazard-summary">Sin datos</p>
+            </div>
+            
+            <div class="hazard-edit">
+                <label for="hazard-level">Nivel:</label>
+                <select id="hazard-level">
+                    <option value="none">🟢 Ninguno</option>
+                    <option value="low">🟡 Bajo (Medusas, Corrientes)</option>
+                    <option value="medium">🟠 Medio (Rip Currents)</option>
+                    <option value="high">🔴 Alto (Advertencia)</option>
+                </select>
+                
+                <label for="hazard-notes">Notas:</label>
+                <textarea id="hazard-notes" rows="3" placeholder="Observaciones del día..."></textarea>
+                
+                <button class="refresh-btn" id="save-hazard">💾 Guardar</button>
+            </div>
+        </section>
+
+        <footer>
+            <small>Datos por <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> • Actualizado: <span id="footer-time">--</span></small>
+            <small><a href="index.html">← Volver al Dashboard</a></small>
+        </footer>
+    </main>
+
+    <script src="guard.js"></script>
+</body>
+</html>
