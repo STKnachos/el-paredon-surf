@@ -65,15 +65,6 @@ Daily snapshot for beach patrol and ocean rescue teams, but accessible for all. 
 - Local cache fallback when API is unavailable
 - Emoji favicon (🏄)
 
-//### SEO
-// - Open Graph meta tags for social sharing
-// - Twitter Card support
-// - Structured data (Schema.org LocalBusiness + WeatherForecast)
-// - Geo tags for local search
-// - XML sitemap
-// - robots.txt
-// - Canonical URLs
-
 ### Integrations
 - **Analytics**: Privacy-friendly tracking via Plausible.io
 - **Sponsorships**: Clickable logo linking to Instagram or partner website
