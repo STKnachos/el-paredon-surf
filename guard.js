@@ -27,9 +27,10 @@ function dualWave(meters) {
     return `${meters.toFixed(1)}m <span class="unit-secondary">(${(meters * 3.28084).toFixed(1)}ft)</span>`;
 }
 
-function dualWind(kmh) {
+function dualWind(kmh, degrees) {
     if (kmh == null || isNaN(kmh)) return '--';
-    return `${Math.round(kmh)} km/h <span class="unit-secondary">(${Math.round(kmh * 0.621371)} mph)</span>`;
+    const dir = getCardinalDirection(degrees);
+    return `${Math.round(kmh)} km/h ${dir} <span class="unit-secondary">(${Math.round(kmh * 0.621371)} mph)</span>`;
 }
 
 function dualTemp(celsius) {
@@ -164,7 +165,10 @@ function renderSnapshot(weather, marine) {
     const idx = getCurrentHourIndex(wHourly.time);
 
     document.getElementById('wave-height').innerHTML = dualWave(mHourly.wave_height?.[idx]);
-    document.getElementById('wind-speed').innerHTML = dualWind(wHourly.wind_speed_10m?.[idx]);
+    document.getElementById('wind-speed').innerHTML = dualWind(
+    wHourly.wind_speed_10m?.[idx],
+    wHourly.wind_direction_10m?.[idx]
+);
     document.getElementById('air-temp').innerHTML = dualTemp(wHourly.temperature_2m?.[idx]);
     document.getElementById('humidity').innerHTML =
         `${wHourly.relative_humidity_2m?.[idx] ?? '--'}%`;
